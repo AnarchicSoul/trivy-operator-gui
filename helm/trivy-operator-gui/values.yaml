@@ -126,13 +126,13 @@ frontend:
 
 # Ingress configuration
 ingress:
-  enabled: false
-  className: "nginx"
+  enabled: true
+  className: "traefik"
   annotations: {}
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # traefik.ingress.kubernetes.io/router.entrypoints: web
   hosts:
-    - host: trivy-gui.example.com
+    - host: trivy-gui.local
       paths:
         - path: /
           pathType: Prefix
