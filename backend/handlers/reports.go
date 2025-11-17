@@ -175,6 +175,8 @@ func (h *Handler) GetInfraAssessmentReports(c *gin.Context) {
 
 	reports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
 	if err != nil {
+		// Log the error for debugging
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -58,6 +58,8 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 	// Get all infrastructure assessment reports
 	infraReports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
 	if err != nil {
+		// Log the error for debugging
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

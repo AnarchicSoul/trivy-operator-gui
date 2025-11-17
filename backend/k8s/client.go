@@ -267,18 +267,19 @@ func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAs
 	unstructuredList, err := c.DynamicClient.Resource(ClusterInfraAssessmentReportGVR).
 		List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list infrastructure assessment reports: %w", err)
+		return nil, fmt.Errorf("failed to list clusterinfraassessmentreports (GVR: %v): %w", ClusterInfraAssessmentReportGVR, err)
 	}
 
 	// Convert unstructured to typed object
 	data, err := unstructuredList.MarshalJSON()
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal infrastructure assessment reports: %w", err)
+		return nil, fmt.Errorf("failed to marshal clusterinfraassessmentreports to JSON: %w", err)
 	}
 
 	var reportList models.InfraAssessmentReportList
 	if err := json.Unmarshal(data, &reportList); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal infrastructure assessment reports: %w", err)
+		// Log the problematic JSON for debugging
+		return nil, fmt.Errorf("failed to unmarshal clusterinfraassessmentreports (data length: %d bytes): %w", len(data), err)
 	}
 
 	return &reportList, nil
