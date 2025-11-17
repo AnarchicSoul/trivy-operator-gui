@@ -21,8 +21,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Tooltip,
+  Link,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import CloseIcon from '@mui/icons-material/Close';
 import { getVulnerabilityReports, getConfigAuditReports, getNamespaces } from '../services/api';
 
 const SEVERITY_COLORS = {
@@ -42,6 +50,8 @@ const ReportsView = () => {
   const [selectedNamespace, setSelectedNamespace] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const fetchNamespaces = async () => {
     try {
@@ -79,6 +89,16 @@ const ReportsView = () => {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleOpenDetail = (report) => {
+    setSelectedReport(report);
+    setDetailDialogOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailDialogOpen(false);
+    setSelectedReport(null);
   };
 
   const formatDate = (timestamp) => {
@@ -163,7 +183,12 @@ const ReportsView = () => {
                 </TableRow>
               ) : (
                 vulnReports.map((report, index) => (
-                  <TableRow key={index} hover>
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => handleOpenDetail(report)}
+                  >
                     <TableCell>{report.metadata.name}</TableCell>
                     <TableCell>{report.metadata.namespace}</TableCell>
                     <TableCell>
@@ -251,7 +276,12 @@ const ReportsView = () => {
                 </TableRow>
               ) : (
                 configReports.map((report, index) => (
-                  <TableRow key={index} hover>
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => handleOpenDetail(report)}
+                  >
                     <TableCell>{report.metadata.name}</TableCell>
                     <TableCell>{report.metadata.namespace}</TableCell>
                     <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
@@ -307,6 +337,168 @@ const ReportsView = () => {
           </Table>
         </TableContainer>
       )}
+
+      {/* Detail Dialog */}
+      <Dialog
+        open={detailDialogOpen}
+        onClose={handleCloseDetail}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
+              {selectedReport?.metadata.name}
+            </Typography>
+            <IconButton onClick={handleCloseDetail} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedReport && selectedReport.report.vulnerabilities && (
+            /* Vulnerability Report Details */
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>CVE ID</strong></TableCell>
+                    <TableCell><strong>Package</strong></TableCell>
+                    <TableCell><strong>Installed Version</strong></TableCell>
+                    <TableCell><strong>Fixed Version</strong></TableCell>
+                    <TableCell><strong>Severity</strong></TableCell>
+                    <TableCell><strong>Title</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedReport.report.vulnerabilities.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                          No vulnerabilities found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReport.report.vulnerabilities.map((vuln, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {vuln.primaryLink ? (
+                            <Link href={vuln.primaryLink} target="_blank" rel="noopener">
+                              {vuln.vulnerabilityID}
+                            </Link>
+                          ) : (
+                            vuln.vulnerabilityID
+                          )}
+                        </TableCell>
+                        <TableCell>{vuln.resource}</TableCell>
+                        <TableCell>{vuln.installedVersion}</TableCell>
+                        <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={vuln.severity}
+                            size="small"
+                            sx={{
+                              bgcolor: SEVERITY_COLORS[vuln.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                              color: 'white',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 400 }}>
+                          <Tooltip title={vuln.title || 'N/A'} placement="top">
+                            <Box
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {vuln.title || 'N/A'}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+          {selectedReport && selectedReport.report.checks && (
+            /* Config Audit Report Details */
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Check ID</strong></TableCell>
+                    <TableCell><strong>Title</strong></TableCell>
+                    <TableCell><strong>Category</strong></TableCell>
+                    <TableCell><strong>Severity</strong></TableCell>
+                    <TableCell><strong>Status</strong></TableCell>
+                    <TableCell><strong>Description</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedReport.report.checks.filter(check => !check.success).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" color="success.main" sx={{ py: 2 }}>
+                          All checks passed!
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReport.report.checks.filter(check => !check.success).map((check, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{check.checkID}</TableCell>
+                        <TableCell>{check.title}</TableCell>
+                        <TableCell>{check.category}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={check.severity}
+                            size="small"
+                            sx={{
+                              bgcolor: SEVERITY_COLORS[check.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                              color: 'white',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label="Failed"
+                            size="small"
+                            color="error"
+                          />
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 400 }}>
+                          <Tooltip title={check.description || 'N/A'} placement="top">
+                            <Box
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                              }}
+                            >
+                              {check.description || 'N/A'}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDetail} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
