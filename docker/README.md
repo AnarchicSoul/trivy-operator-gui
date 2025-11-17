@@ -27,10 +27,10 @@ docker/
 cd trivy-operator-gui
 
 # Build l'image backend
-docker build -f docker/backend.Dockerfile -t johan91/trivy-operator-gui-backend:latest ./backend
+docker build -f docker/backend.Dockerfile -t johan91/trivy-operator-gui-backend:latest .
 
 # Ou avec une version spécifique
-docker build -f docker/backend.Dockerfile -t johan91/trivy-operator-gui-backend:v1.0.0 ./backend
+docker build -f docker/backend.Dockerfile -t johan91/trivy-operator-gui-backend:v1.0.0 .
 ```
 
 ### Frontend
@@ -40,10 +40,10 @@ docker build -f docker/backend.Dockerfile -t johan91/trivy-operator-gui-backend:
 cd trivy-operator-gui
 
 # Build l'image frontend
-docker build -f docker/frontend.Dockerfile -t johan91/trivy-operator-gui-frontend:latest ./frontend
+docker build -f docker/frontend.Dockerfile -t johan91/trivy-operator-gui-frontend:latest .
 
 # Ou avec une version spécifique
-docker build -f docker/frontend.Dockerfile -t johan91/trivy-operator-gui-frontend:v1.0.0 ./frontend
+docker build -f docker/frontend.Dockerfile -t johan91/trivy-operator-gui-frontend:v1.0.0 .
 ```
 
 ## Push vers Docker Hub
@@ -82,7 +82,7 @@ docker buildx build \
   -f docker/backend.Dockerfile \
   -t johan91/trivy-operator-gui-backend:latest \
   --push \
-  ./backend
+  .
 
 # Build et push frontend multi-arch
 docker buildx build \
@@ -90,7 +90,7 @@ docker buildx build \
   -f docker/frontend.Dockerfile \
   -t johan91/trivy-operator-gui-frontend:latest \
   --push \
-  ./frontend
+  .
 ```
 
 ## Tester les Images Localement
@@ -221,12 +221,12 @@ echo "Building version: $VERSION"
 # Build backend
 docker build -f docker/backend.Dockerfile \
   -t $DOCKER_USER/trivy-operator-gui-backend:$VERSION \
-  ./backend
+  .
 
 # Build frontend
 docker build -f docker/frontend.Dockerfile \
   -t $DOCKER_USER/trivy-operator-gui-frontend:$VERSION \
-  ./frontend
+  .
 
 # Push
 echo "Pushing to Docker Hub..."
