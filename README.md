@@ -290,6 +290,41 @@ npm run build
 
 ## Troubleshooting
 
+### Docker build fails with "missing go.sum entry"
+
+**Problem**: Backend Docker build fails with errors like:
+```
+missing go.sum entry for module providing package...
+```
+
+**Solution**: The `go.sum` file is generated automatically during Docker build. The Dockerfile has been fixed to run `go mod tidy` which generates the required checksums.
+
+If you still encounter issues:
+
+1. **Make sure you're using the latest Dockerfile**:
+```bash
+git pull origin main
+```
+
+2. **Clear Docker build cache**:
+```bash
+docker build --no-cache -f docker/backend.Dockerfile -t trivy-operator-gui-backend:latest .
+```
+
+3. **Generate go.sum locally** (optional, for verification):
+```bash
+cd backend
+go mod download
+go mod tidy
+# This creates backend/go.sum with all dependency checksums
+```
+
+**Technical Details**: Go modules require `go.sum` for reproducible builds. The Dockerfile now:
+- Copies only `go.mod` first
+- Runs `go mod download` to fetch dependencies
+- Runs `go mod tidy` to generate `go.sum`
+- Then builds the application
+
 ### No reports showing up
 
 1. **Verify Trivy Operator is running**:

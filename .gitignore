@@ -46,9 +46,6 @@ yarn.lock
 helm/**/charts/
 helm/**/*.tgz
 
-# Docker
-.dockerignore
-
 # Kubernetes
 *.kubeconfig
 kubeconfig

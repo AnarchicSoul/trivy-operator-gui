@@ -4,17 +4,19 @@ FROM golang:1.21-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files
-COPY backend/go.mod backend/go.sum ./
+# Copy go mod file first to cache dependencies layer
+COPY backend/go.mod ./
 
-# Download dependencies
+# Initialize module and download dependencies
+# go mod tidy will generate go.sum automatically
 RUN go mod download
 
 # Copy source code
 COPY backend/ ./
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o trivy-operator-gui-backend .
+# Tidy dependencies (generates/updates go.sum) and build
+RUN go mod tidy && \
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o trivy-operator-gui-backend .
 
 # Final stage
 FROM alpine:3.19

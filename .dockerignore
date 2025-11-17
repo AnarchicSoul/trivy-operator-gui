@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+LICENSE
+docs/
+
+# Helm charts
+helm/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*_test.go
+**/test/
+**/__tests__/
+
+# Environment files
+.env
+.env.*
+
+# Don't exclude go.sum - it's needed for reproducible builds
+# !backend/go.sum
