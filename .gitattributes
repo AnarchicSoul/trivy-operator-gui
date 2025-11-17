@@ -1,0 +1,3 @@
+# Force Unix line endings (LF) for shell scripts and nginx configs
+*.sh text eol=lf
+docker/*.conf text eol=lf
