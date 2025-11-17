@@ -8,10 +8,14 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+# Using npm install instead of npm ci since package-lock.json may not exist
+RUN npm install --omit=dev
 
 # Copy source code
 COPY frontend/ ./
+
+# Install dev dependencies for build (vite, etc.)
+RUN npm install
 
 # Build the application
 RUN npm run build

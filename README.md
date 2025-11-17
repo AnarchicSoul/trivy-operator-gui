@@ -325,6 +325,39 @@ go mod tidy
 - Runs `go mod tidy` to generate `go.sum`
 - Then builds the application
 
+### Frontend build fails with "npm ci can only install with existing package-lock.json"
+
+**Problem**: Frontend Docker build fails with:
+```
+npm error The `npm ci` command can only install with an existing package-lock.json
+```
+
+**Solution**: The frontend Dockerfile has been updated to use `npm install` instead of `npm ci`, which doesn't require a lock file.
+
+If you still encounter issues:
+
+1. **Pull the latest changes**:
+```bash
+git pull origin claude/analyze-trivy-operator-01HY7RnyVbM3qG538vHCZGnc
+```
+
+2. **Clear Docker cache**:
+```bash
+docker build --no-cache -f docker/frontend.Dockerfile -t trivy-operator-gui-frontend:latest .
+```
+
+3. **Generate package-lock.json locally** (optional, for best practices):
+```bash
+cd frontend
+npm install
+# This creates frontend/package-lock.json
+```
+
+**Technical Details**:
+- `npm ci` requires a lock file for reproducible builds
+- `npm install` is more flexible and generates the lock file if needed
+- The Dockerfile installs dependencies, then runs the build
+
 ### No reports showing up
 
 1. **Verify Trivy Operator is running**:
