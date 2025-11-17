@@ -175,48 +175,9 @@ helm package trivy-operator-gui
 # Cela crée : trivy-operator-gui-0.1.0.tgz
 ```
 
-### Publier sur un dépôt Helm
+### Publier sur Docker Hub (OCI Registry) - Recommandé
 
-#### Option 1 : Dépôt GitHub Pages
-
-```bash
-# 1. Créer un dépôt Git pour les charts
-mkdir helm-charts
-cd helm-charts
-git init
-
-# 2. Copier le package
-cp ../trivy-operator-gui-*.tgz .
-
-# 3. Créer l'index
-helm repo index . --url https://votre-user.github.io/helm-charts
-
-# 4. Commit et push
-git add .
-git commit -m "Add trivy-operator-gui chart"
-git push origin main
-
-# 5. Activer GitHub Pages sur la branche main
-
-# 6. Utilisateurs peuvent ajouter le repo :
-helm repo add mon-repo https://votre-user.github.io/helm-charts
-helm repo update
-helm install trivy-operator-gui mon-repo/trivy-operator-gui
-```
-
-#### Option 2 : Push vers ChartMuseum
-
-```bash
-# Installer le plugin
-helm plugin install https://github.com/chartmuseum/helm-push
-
-# Push vers ChartMuseum
-helm cm-push trivy-operator-gui-0.1.0.tgz chartmuseum
-```
-
-#### Option 3 : Docker Hub (OCI Registry)
-
-Helm 3 supporte les registries OCI (Docker Hub, GHCR, etc.) :
+Helm 3 supporte nativement les registries OCI (Docker Hub, GHCR, etc.) :
 
 ```bash
 # Login

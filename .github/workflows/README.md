@@ -54,7 +54,7 @@ git push origin v1.0.0
 
 ### 2. 📦 Package and Publish Helm Chart (`helm-package-push.yml`)
 
-Package le chart Helm et le publie sur GitHub Pages.
+Package le chart Helm et le publie sur Docker Hub OCI Registry.
 
 #### Déclencheurs
 
@@ -65,40 +65,42 @@ Package le chart Helm et le publie sur GitHub Pages.
 #### Fonctionnalités
 
 - ✅ Package automatique du chart Helm
-- ✅ Publication sur GitHub Pages
-- ✅ Génération d'index Helm automatique
-- ✅ Page HTML d'accueil pour le repository
+- ✅ Publication sur Docker Hub OCI Registry
+- ✅ Support Helm 3.8+ (OCI natif)
 - ✅ GitHub Release avec chart en pièce jointe (pour tags)
+- ✅ Pas besoin de GitHub Pages
 
-#### URL du Repository Helm
+#### Registre OCI
 
-Une fois publié, le repository sera accessible à :
+Le chart sera publié sur Docker Hub OCI :
 
 ```
-https://anarchicsoul.github.io/trivy-operator-gui/charts
+oci://registry-1.docker.io/johan91/trivy-operator-gui
 ```
 
 #### Utilisation du Chart Publié
 
 ```bash
-# Ajouter le repository
-helm repo add trivy-operator-gui https://anarchicsoul.github.io/trivy-operator-gui/charts
-helm repo update
+# Installation directe depuis Docker Hub OCI (Helm 3.8+)
+helm install trivy-operator-gui \
+  oci://registry-1.docker.io/johan91/trivy-operator-gui \
+  --version 0.1.0 \
+  --namespace trivy-system \
+  --create-namespace
 
-# Installer
-helm install trivy-operator-gui trivy-operator-gui/trivy-operator-gui \
+# Ou pull puis install
+helm pull oci://registry-1.docker.io/johan91/trivy-operator-gui --version 0.1.0
+helm install trivy-operator-gui ./trivy-operator-gui-0.1.0.tgz \
   --namespace trivy-system \
   --create-namespace
 ```
 
-#### Configuration GitHub Pages
+#### Secrets Requis
 
-1. Aller dans **Settings → Pages**
-2. Source : **Deploy from a branch**
-3. Branch : **gh-pages** / `/(root)`
-4. Save
+Utilise les mêmes secrets Docker Hub que le workflow de build d'images :
 
-Le workflow créera automatiquement la branche `gh-pages` lors de la première exécution.
+- `DOCKERHUB_USERNAME` : Votre nom d'utilisateur Docker Hub
+- `DOCKERHUB_TOKEN` : Token d'accès Docker Hub
 
 ---
 
@@ -121,14 +123,7 @@ Ajouter les secrets dans GitHub :
 3. Ajouter `DOCKERHUB_USERNAME` : votre nom d'utilisateur
 4. Ajouter `DOCKERHUB_TOKEN` : le token copié
 
-### 2. Activer GitHub Pages
-
-1. **Settings → Pages**
-2. Source : **Deploy from a branch**
-3. Branch : **gh-pages** / `/(root)`
-4. Save
-
-### 3. Permissions des Workflows
+### 2. Permissions des Workflows
 
 Vérifier que les workflows ont les bonnes permissions :
 
@@ -159,9 +154,9 @@ git push origin v1.2.0
 ```
 
 Les workflows vont :
-- ✅ Builder et pusher `johan91/trivy-operator-gui-backend:1.2.0`
-- ✅ Builder et pusher `johan91/trivy-operator-gui-frontend:1.2.0`
-- ✅ Packager et publier le chart Helm version 1.2.0
+- ✅ Builder et pusher `johan91/trivy-operator-gui-backend:1.2.0` (Docker Hub)
+- ✅ Builder et pusher `johan91/trivy-operator-gui-frontend:1.2.0` (Docker Hub)
+- ✅ Packager et pusher le chart Helm `johan91/trivy-operator-gui:1.2.0` (Docker Hub OCI)
 - ✅ Créer une GitHub Release avec le chart en pièce jointe
 
 ### Build de Développement
