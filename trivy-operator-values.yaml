@@ -1,0 +1,146 @@
+# Trivy Operator Values - Configuration for Builtin Security Policies
+#
+# This configuration enables the builtin Rego policies from Aqua Security
+# which include comprehensive Kubernetes security checks such as:
+# - Running as root user (KSV012)
+# - Security context configuration (KSV118)
+# - Resource limits (KSV011, KSV015, KSV016, KSV018)
+# - Capabilities (KSV001, KSV003, KSV004, KSV106)
+# - Seccomp profiles (KSV030, KSV104)
+# - Read-only root filesystem (KSV014)
+# - UID/GID restrictions (KSV020, KSV021)
+# And many more...
+
+# Use builtin Rego policies from the official OCI repository
+trivy:
+  # IMPORTANT: Enable builtin policies (download from ghcr.io)
+  useBuiltinRegoPolicies: "true"
+
+  # IMPORTANT: Disable embedded policies when using builtin
+  useEmbeddedRegoPolicies: "false"
+
+  # Image configuration
+  image:
+    registry: ghcr.io
+    repository: aquasecurity/trivy
+    tag: 0.66.0
+    pullPolicy: IfNotPresent
+
+  # Download vulnerabilities database from official registry
+  dbRegistry: "ghcr.io"
+  dbRepository: "aquasecurity/trivy-db"
+
+  # Java database
+  javaDbRegistry: "ghcr.io"
+  javaDbRepository: "aquasecurity/trivy-java-db"
+
+  # Scan configuration
+  severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+  ignoreUnfixed: false
+  timeout: "5m0s"
+  slow: true
+
+  # Resource limits for scan jobs
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100M
+    limits:
+      cpu: 500m
+      memory: 500M
+
+# Operator configuration
+operator:
+  # Scanner replicas
+  replicas: 1
+
+  # Scan job settings
+  scanJobTTL: "24h"
+  scanJobTimeout: 5m
+  scanJobsConcurrentLimit: 10
+
+  # Report retention
+  scannerReportTTL: "24h"
+
+  # Enable all scanners
+  vulnerabilityScannerEnabled: true
+  configAuditScannerEnabled: true
+  rbacAssessmentScannerEnabled: true
+  infraAssessmentScannerEnabled: true
+  exposedSecretScannerEnabled: true
+  clusterComplianceEnabled: true
+
+  # Scan only current revisions
+  vulnerabilityScannerScanOnlyCurrentRevisions: true
+  configAuditScannerScanOnlyCurrentRevisions: true
+
+# Trivy Operator specific settings
+trivyOperator:
+  # Plugins
+  vulnerabilityReportsPlugin: "Trivy"
+  configAuditReportsPlugin: "Trivy"
+
+  # Only record failed checks (not passed ones)
+  reportRecordFailedChecksOnly: true
+
+  # Compress scan job logs
+  scanJobCompressLogs: true
+
+  # Security context for scan jobs
+  scanJobPodTemplateContainerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    privileged: false
+    readOnlyRootFilesystem: true
+
+# Compliance reports
+compliance:
+  # Limit fail entries per control to avoid huge reports
+  failEntriesLimit: 10
+
+  # Report type (summary or all)
+  reportType: summary
+
+  # Cron schedule for compliance report generation (every 6 hours)
+  cron: "0 */6 * * *"
+
+  # Compliance frameworks to check
+  specs:
+    - k8s-cis-1.23
+    - k8s-nsa-1.0
+    - k8s-pss-baseline-0.1
+    - k8s-pss-restricted-0.1
+
+# Service Account and RBAC
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  name: trivy-operator
+
+# Operator pod resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 100Mi
+  limits:
+    cpu: 500m
+    memory: 500Mi
+
+# Operator pod security
+podSecurityContext: {}
+
+securityContext:
+  privileged: false
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Service Monitor for Prometheus (optional)
+serviceMonitor:
+  enabled: false
