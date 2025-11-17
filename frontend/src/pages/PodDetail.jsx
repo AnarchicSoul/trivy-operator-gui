@@ -26,6 +26,7 @@ import {
   Tabs,
   Tab,
   Divider,
+  Tooltip,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -249,7 +250,19 @@ const PodDetail = () => {
                                   }}
                                 />
                               </TableCell>
-                              <TableCell>{vuln.title || 'N/A'}</TableCell>
+                              <TableCell sx={{ maxWidth: 400 }}>
+                                <Tooltip title={vuln.title || 'N/A'} placement="top">
+                                  <Box
+                                    sx={{
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {vuln.title || 'N/A'}
+                                  </Box>
+                                </Tooltip>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
@@ -348,8 +361,36 @@ const PodDetail = () => {
                                     }}
                                   />
                                 </TableCell>
-                                <TableCell sx={{ maxWidth: 300 }}>{check.description || 'N/A'}</TableCell>
-                                <TableCell sx={{ maxWidth: 300 }}>{check.remediation || 'N/A'}</TableCell>
+                                <TableCell sx={{ maxWidth: 300 }}>
+                                  <Tooltip title={check.description || 'N/A'} placement="top">
+                                    <Box
+                                      sx={{
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                      }}
+                                    >
+                                      {check.description || 'N/A'}
+                                    </Box>
+                                  </Tooltip>
+                                </TableCell>
+                                <TableCell sx={{ maxWidth: 300 }}>
+                                  <Tooltip title={check.remediation || 'N/A'} placement="top">
+                                    <Box
+                                      sx={{
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                      }}
+                                    >
+                                      {check.remediation || 'N/A'}
+                                    </Box>
+                                  </Tooltip>
+                                </TableCell>
                               </TableRow>
                             ))
                           )}

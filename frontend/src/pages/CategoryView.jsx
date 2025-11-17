@@ -19,6 +19,7 @@ import {
   Link,
   ButtonGroup,
   Button,
+  Tooltip,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -188,7 +189,19 @@ const CategoryView = () => {
                   <TableCell>{vuln.resource}</TableCell>
                   <TableCell>{vuln.installedVersion}</TableCell>
                   <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
-                  <TableCell>{vuln.title || 'N/A'}</TableCell>
+                  <TableCell sx={{ maxWidth: 400 }}>
+                    <Tooltip title={vuln.title || 'N/A'} placement="top">
+                      <Box
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {vuln.title || 'N/A'}
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))
             )}
