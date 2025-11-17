@@ -43,15 +43,6 @@ export const getInfraAssessmentReports = () => {
   return api.get('/reports/infra-assessment');
 };
 
-// Pods
-export const getPodsList = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/pods', { params });
-};
-
-export const getPodReports = (namespace, podName) =>
-  api.get(`/pods/${namespace}/${podName}`);
-
 // Categories
 export const getReportsByCategory = (severity) =>
   api.get(`/category/${severity}`);

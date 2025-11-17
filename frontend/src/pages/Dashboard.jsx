@@ -100,24 +100,24 @@ const Dashboard = () => {
   ].filter(item => item.value > 0);
 
   const secretData = [
-    { name: 'Critical', value: dashboard.exposedSecretSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.exposedSecretSummary.highCount, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.exposedSecretSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.exposedSecretSummary.lowCount, color: SEVERITY_COLORS.LOW },
+    { name: 'Critical', value: dashboard.exposedSecretSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.exposedSecretSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.exposedSecretSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.exposedSecretSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
   const rbacData = [
-    { name: 'Critical', value: dashboard.rbacIssueSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.rbacIssueSummary.highCount, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.rbacIssueSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.rbacIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
+    { name: 'Critical', value: dashboard.rbacIssueSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.rbacIssueSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.rbacIssueSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.rbacIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
   const infraData = [
-    { name: 'Critical', value: dashboard.infraIssueSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.infraIssueSummary.highCount, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.infraIssueSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.infraIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
+    { name: 'Critical', value: dashboard.infraIssueSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.infraIssueSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.infraIssueSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.infraIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
   const namespaceData = Object.entries(dashboard.podsByNamespace || {}).map(([name, count]) => ({
@@ -178,7 +178,7 @@ const Dashboard = () => {
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h6">Exposed Secrets</Typography>
-                  <Typography variant="h3">{dashboard.totalExposedSecrets}</Typography>
+                  <Typography variant="h3">{dashboard.totalExposedSecrets || 0}</Typography>
                 </Box>
                 <VpnKeyIcon sx={{ fontSize: 60, opacity: 0.3 }} />
               </Box>
@@ -191,7 +191,7 @@ const Dashboard = () => {
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h6">RBAC Issues</Typography>
-                  <Typography variant="h3">{dashboard.totalRbacIssues}</Typography>
+                  <Typography variant="h3">{dashboard.totalRbacIssues || 0}</Typography>
                 </Box>
                 <SecurityIcon sx={{ fontSize: 60, opacity: 0.3 }} />
               </Box>
@@ -204,7 +204,7 @@ const Dashboard = () => {
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h6">Infra Issues</Typography>
-                  <Typography variant="h3">{dashboard.totalInfraIssues}</Typography>
+                  <Typography variant="h3">{dashboard.totalInfraIssues || 0}</Typography>
                 </Box>
                 <CloudIcon sx={{ fontSize: 60, opacity: 0.3 }} />
               </Box>
