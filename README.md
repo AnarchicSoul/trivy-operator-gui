@@ -6,6 +6,9 @@ Trivy Operator GUI est une interface web moderne pour visualiser les rapports de
 
 - **Vulnérabilités des images** : CVE détectées dans vos conteneurs
 - **Problèmes de configuration** : Audit de sécurité de vos ressources Kubernetes
+- **Secrets exposés** : Détection de credentials et clés API hardcodées dans les images
+- **RBAC Assessment** : Analyse des permissions et rôles Kubernetes
+- **Infrastructure Assessment** : Évaluation de la sécurité au niveau cluster
 - **Vue par pod** : Analyse détaillée de la sécurité de chaque pod avec filtrage par namespace
 - **Tableaux de bord** : Vue d'ensemble de la sécurité de votre cluster
 
@@ -17,8 +20,11 @@ L'application est composée de deux parties :
 - **Frontend React** : Interface web responsive avec Material-UI
 
 Les rapports sont catégorisés par type :
-- **Image** : Vulnérabilités dans les images de conteneurs
-- **Configuration** : Problèmes de configuration Kubernetes
+- **Vulnerability** : Vulnérabilités (CVE) dans les images de conteneurs
+- **Config Audit** : Problèmes de configuration Kubernetes (sécurité des workloads)
+- **Exposed Secrets** : Credentials exposés (tokens, clés API, passwords)
+- **RBAC Assessment** : Problèmes de contrôle d'accès basé sur les rôles
+- **Infrastructure** : Problèmes de sécurité au niveau infrastructure cluster
 
 ## Prérequis
 
@@ -151,7 +157,13 @@ backend:
 3. **Détail d'un pod** :
    - Onglet "Vulnerabilities" : CVE par conteneur
    - Onglet "Configuration Issues" : Problèmes de configuration avec remédiation
-4. **Reports** : Vue de tous les rapports avec filtrage par namespace
+4. **Reports** : Vue de tous les rapports avec filtrage par namespace et 5 onglets :
+   - **Vulnerability Reports** : Rapports de vulnérabilités CVE
+   - **Config Audit** : Rapports d'audit de configuration
+   - **Exposed Secrets** : Rapports de secrets exposés
+   - **RBAC Assessment** : Rapports d'évaluation RBAC
+   - **Infra Assessment** : Rapports d'évaluation d'infrastructure
+   - Cliquez sur un rapport pour voir les détails complets
 5. **Categories** : Vulnérabilités groupées par sévérité
 
 ### Navigation

@@ -167,17 +167,42 @@ Vue détaillée d'un pod spécifique avec onglets :
 
 ### 4. Reports View (`/reports`)
 
-Tous les rapports bruts avec onglets :
+Tous les rapports bruts avec 5 onglets :
 
 **Onglet 1 : Vulnerability Reports**
 - Liste complète des VulnerabilityReports
 - Filtrage par namespace
 - Colonnes : Name, Namespace, Image, Scanner, Severity counts
+- Cliquez sur un rapport pour voir tous les CVE
 
 **Onglet 2 : Config Audit Reports**
 - Liste complète des ConfigAuditReports
 - Filtrage par namespace
 - Colonnes : Name, Namespace, Scanner, Severity counts
+- Cliquez sur un rapport pour voir tous les checks échoués
+
+**Onglet 3 : Exposed Secrets Reports**
+- Liste complète des ExposedSecretReports
+- Filtrage par namespace
+- Détection de credentials hardcodés (AWS keys, GitHub tokens, etc.)
+- Cliquez sur un rapport pour voir les secrets trouvés
+
+**Onglet 4 : RBAC Assessment Reports**
+- Liste complète des RbacAssessmentReports
+- Filtrage par namespace
+- Évaluation des permissions et rôles RBAC
+- Cliquez sur un rapport pour voir les problèmes de permissions
+
+**Onglet 5 : Infra Assessment Reports**
+- Liste complète des InfraAssessmentReports
+- Rapports cluster-scoped (pas de filtrage namespace)
+- Évaluation de la sécurité infrastructure (etcd, API server, etc.)
+- Cliquez sur un rapport pour voir les problèmes d'infrastructure
+
+**Modale de détails** :
+- Affichage des détails complets pour chaque type de rapport
+- Tables avec tri par sévérité
+- Tooltips pour les textes longs
 
 ### 5. Category View (`/category/:severity`)
 

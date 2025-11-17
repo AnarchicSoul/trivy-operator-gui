@@ -150,6 +150,38 @@ GET /api/reports/vulnerability?namespace=<namespace>
 GET /api/reports/config-audit?namespace=<namespace>
 ```
 
+#### Tous les rapports de secrets exposés
+
+```bash
+GET /api/reports/exposed-secret?namespace=<namespace>
+```
+
+Retourne les rapports de secrets exposés (credentials, tokens, clés API hardcodées).
+
+**Paramètres** :
+- `namespace` (optionnel) : Filtrer par namespace
+
+#### Tous les rapports d'évaluation RBAC
+
+```bash
+GET /api/reports/rbac-assessment?namespace=<namespace>
+```
+
+Retourne les rapports d'évaluation des rôles et permissions RBAC.
+
+**Paramètres** :
+- `namespace` (optionnel) : Filtrer par namespace
+
+#### Tous les rapports d'évaluation d'infrastructure
+
+```bash
+GET /api/reports/infra-assessment
+```
+
+Retourne les rapports d'évaluation de la sécurité au niveau infrastructure (cluster-scoped).
+
+**Note** : Pas de paramètre namespace car les rapports d'infrastructure sont cluster-scoped.
+
 ### Pods
 
 #### Liste des pods
@@ -235,6 +267,15 @@ curl http://localhost:8080/api/pods?namespace=default | jq
 
 # Détail d'un pod
 curl http://localhost:8080/api/pods/default/nginx-abc123 | jq
+
+# Rapports de secrets exposés
+curl http://localhost:8080/api/reports/exposed-secret | jq
+
+# Rapports RBAC assessment
+curl http://localhost:8080/api/reports/rbac-assessment?namespace=default | jq
+
+# Rapports d'infrastructure
+curl http://localhost:8080/api/reports/infra-assessment | jq
 
 # Vulnérabilités critiques
 curl http://localhost:8080/api/category/CRITICAL | jq
@@ -440,6 +481,8 @@ rules:
       - vulnerabilityreports
       - configauditreports
       - exposedsecretreports
+      - rbacassessmentreports
+      - infraassessmentreports
     verbs: ["get", "list", "watch"]
 
   - apiGroups: [""]
