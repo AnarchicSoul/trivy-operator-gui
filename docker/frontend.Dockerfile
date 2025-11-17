@@ -72,17 +72,13 @@ EOF
 # Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create non-root user
-RUN addgroup -g 1000 appuser && \
-    adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /usr/share/nginx/html && \
-    chown -R appuser:appuser /var/cache/nginx && \
-    chown -R appuser:appuser /var/log/nginx && \
+# Setup permissions for nginx to run properly
+# Nginx needs write access to these directories
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appuser /var/run/nginx.pid
-
-# Switch to non-root user
-USER appuser
+    chown nginx:nginx /var/run/nginx.pid
 
 # Expose port
 EXPOSE 80

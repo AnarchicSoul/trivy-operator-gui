@@ -15,7 +15,7 @@ backend:
     tag: "latest"
     pullPolicy: IfNotPresent
 
-  replicas: 2
+  replicas: 1
 
   resources:
     limits:
@@ -72,7 +72,7 @@ frontend:
     tag: "latest"
     pullPolicy: IfNotPresent
 
-  replicas: 2
+  replicas: 1
 
   resources:
     limits:
@@ -94,14 +94,16 @@ frontend:
   tolerations: []
 
   # Security context
+  # Note: Nginx runs as user 101 (nginx) by default in Alpine
   securityContext:
     runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 1000
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
     capabilities:
       drop:
         - ALL
-    readOnlyRootFilesystem: true
+    readOnlyRootFilesystem: false  # Nginx needs to write to /var/cache and /var/run
 
   # Liveness and readiness probes
   livenessProbe:
