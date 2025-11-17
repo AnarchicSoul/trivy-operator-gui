@@ -23,8 +23,11 @@ RUN npm run build
 # Production stage - serve with nginx
 FROM nginx:1.25-alpine
 
-# Copy custom nginx config template
-COPY <<EOF /etc/nginx/templates/default.conf.template
+# Install envsubst (part of gettext package)
+RUN apk add --no-cache gettext
+
+# Create nginx config template
+COPY <<'EOF' /tmp/nginx-template.conf
 server {
     listen 80;
     server_name _;
@@ -44,20 +47,20 @@ server {
 
     # Main location
     location / {
-        try_files \$uri \$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
 
     # API proxy
     location /api/ {
-        proxy_pass http://\${BACKEND_SERVICE_NAME}:8080/api/;
+        proxy_pass http://${BACKEND_SERVICE_NAME}:8080/api/;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Health check
@@ -69,14 +72,29 @@ server {
 }
 EOF
 
+# Create custom entrypoint script
+COPY <<'EOF' /docker-entrypoint.d/40-generate-config.sh
+#!/bin/sh
+set -e
+
+# Generate nginx config from template with environment variable substitution
+echo "Generating nginx configuration with BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME}"
+envsubst '${BACKEND_SERVICE_NAME}' < /tmp/nginx-template.conf > /etc/nginx/conf.d/default.conf
+
+echo "Nginx configuration generated successfully"
+cat /etc/nginx/conf.d/default.conf
+EOF
+
 # Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Setup permissions for nginx to run properly
 # Nginx needs write access to these directories
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \
     chown nginx:nginx /var/run/nginx.pid
 
