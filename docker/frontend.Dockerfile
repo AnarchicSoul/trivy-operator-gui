@@ -23,8 +23,8 @@ RUN npm run build
 # Production stage - serve with nginx
 FROM nginx:1.25-alpine
 
-# Copy custom nginx config
-COPY <<EOF /etc/nginx/conf.d/default.conf
+# Copy custom nginx config template
+COPY <<EOF /etc/nginx/templates/default.conf.template
 server {
     listen 80;
     server_name _;
@@ -49,7 +49,7 @@ server {
 
     # API proxy
     location /api/ {
-        proxy_pass http://trivy-operator-gui-backend:8080/api/;
+        proxy_pass http://\${BACKEND_SERVICE_NAME}:8080/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';

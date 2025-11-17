@@ -30,6 +30,9 @@ spec:
       - name: frontend
         image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
         imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        env:
+        - name: BACKEND_SERVICE_NAME
+          value: "{{ include \"trivy-operator-gui.fullname\" . }}-backend"
         ports:
         - name: http
           containerPort: 80
