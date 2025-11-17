@@ -45,11 +45,11 @@ var (
 		Resource: "rbacassessmentreports",
 	}
 
-	// InfraAssessmentReportGVR is the GroupVersionResource for InfraAssessmentReports
-	InfraAssessmentReportGVR = schema.GroupVersionResource{
+	// ClusterInfraAssessmentReportGVR is the GroupVersionResource for ClusterInfraAssessmentReports
+	ClusterInfraAssessmentReportGVR = schema.GroupVersionResource{
 		Group:    "aquasecurity.github.io",
 		Version:  "v1alpha1",
-		Resource: "infraassessmentreports",
+		Resource: "clusterinfraassessmentreports",
 	}
 )
 
@@ -261,10 +261,10 @@ func (c *Client) GetAllRbacAssessmentReports(ctx context.Context) (*models.RbacA
 	return c.GetRbacAssessmentReports(ctx, "")
 }
 
-// GetInfraAssessmentReports retrieves all InfraAssessmentReports from a namespace (cluster-scoped)
+// GetInfraAssessmentReports retrieves all ClusterInfraAssessmentReports (cluster-scoped)
 func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAssessmentReportList, error) {
-	// InfraAssessmentReports are cluster-scoped, so we don't specify a namespace
-	unstructuredList, err := c.DynamicClient.Resource(InfraAssessmentReportGVR).
+	// ClusterInfraAssessmentReports are cluster-scoped, so we don't specify a namespace
+	unstructuredList, err := c.DynamicClient.Resource(ClusterInfraAssessmentReportGVR).
 		List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list infrastructure assessment reports: %w", err)

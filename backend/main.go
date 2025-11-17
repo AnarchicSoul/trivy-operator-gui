@@ -47,10 +47,6 @@ func main() {
 		api.GET("/reports/rbac-assessment", handler.GetRbacAssessmentReports)
 		api.GET("/reports/infra-assessment", handler.GetInfraAssessmentReports)
 
-		// Pods
-		api.GET("/pods", handler.GetPodsList)
-		api.GET("/pods/:namespace/:pod", handler.GetPodReports)
-
 		// Categories (by severity)
 		api.GET("/category/:severity", handler.GetReportsByCategory)
 

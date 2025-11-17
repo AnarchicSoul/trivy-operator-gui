@@ -159,7 +159,7 @@ rbac:
         - configauditreports
         - exposedsecretreports
         - rbacassessmentreports
-        - infraassessmentreports
+        - clusterinfraassessmentreports
       verbs:
         - get
         - list

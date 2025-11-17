@@ -482,7 +482,7 @@ rules:
       - configauditreports
       - exposedsecretreports
       - rbacassessmentreports
-      - infraassessmentreports
+      - clusterinfraassessmentreports
     verbs: ["get", "list", "watch"]
 
   - apiGroups: [""]

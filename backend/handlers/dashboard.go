@@ -41,14 +41,35 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 		return
 	}
 
+	// Get all exposed secret reports
+	secretReports, err := h.K8sClient.GetAllExposedSecretReports(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get all RBAC assessment reports
+	rbacReports, err := h.K8sClient.GetAllRbacAssessmentReports(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get all infrastructure assessment reports
+	infraReports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Build dashboard summary
-	dashboard := h.buildDashboardSummary(vulnReports, configReports)
+	dashboard := h.buildDashboardSummary(vulnReports, configReports, secretReports, rbacReports, infraReports)
 
 	c.JSON(http.StatusOK, dashboard)
 }
 
 // buildDashboardSummary aggregates report data into a dashboard summary
-func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportList, configReports *models.ConfigAuditReportList) models.DashboardSummary {
+func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportList, configReports *models.ConfigAuditReportList, secretReports *models.ExposedSecretReportList, rbacReports *models.RbacAssessmentReportList, infraReports *models.InfraAssessmentReportList) models.DashboardSummary {
 	dashboard := models.DashboardSummary{
 		PodsByNamespace:        make(map[string]int),
 		VulnerabilitiesBySeverity: make(map[string]int),
@@ -118,9 +139,59 @@ func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportL
 		}
 	}
 
+	// Process exposed secret reports
+	totalSecrets := 0
+	for _, report := range secretReports.Items {
+		// Aggregate summary
+		dashboard.ExposedSecretSummary.CriticalCount += report.Report.Summary.CriticalCount
+		dashboard.ExposedSecretSummary.HighCount += report.Report.Summary.HighCount
+		dashboard.ExposedSecretSummary.MediumCount += report.Report.Summary.MediumCount
+		dashboard.ExposedSecretSummary.LowCount += report.Report.Summary.LowCount
+
+		// Count total secrets
+		totalSecrets += len(report.Report.Secrets)
+	}
+
+	// Process RBAC assessment reports
+	totalRbacIssues := 0
+	for _, report := range rbacReports.Items {
+		// Aggregate summary
+		dashboard.RbacIssueSummary.CriticalCount += report.Report.Summary.CriticalCount
+		dashboard.RbacIssueSummary.HighCount += report.Report.Summary.HighCount
+		dashboard.RbacIssueSummary.MediumCount += report.Report.Summary.MediumCount
+		dashboard.RbacIssueSummary.LowCount += report.Report.Summary.LowCount
+
+		// Count total RBAC issues
+		for _, check := range report.Report.Checks {
+			if !check.Success {
+				totalRbacIssues++
+			}
+		}
+	}
+
+	// Process infrastructure assessment reports
+	totalInfraIssues := 0
+	for _, report := range infraReports.Items {
+		// Aggregate summary
+		dashboard.InfraIssueSummary.CriticalCount += report.Report.Summary.CriticalCount
+		dashboard.InfraIssueSummary.HighCount += report.Report.Summary.HighCount
+		dashboard.InfraIssueSummary.MediumCount += report.Report.Summary.MediumCount
+		dashboard.InfraIssueSummary.LowCount += report.Report.Summary.LowCount
+
+		// Count total infrastructure issues
+		for _, check := range report.Report.Checks {
+			if !check.Success {
+				totalInfraIssues++
+			}
+		}
+	}
+
 	dashboard.TotalPods = len(uniquePods)
 	dashboard.TotalVulnerabilities = totalVulns
 	dashboard.TotalConfigIssues = totalConfigIssues
+	dashboard.TotalExposedSecrets = totalSecrets
+	dashboard.TotalRbacIssues = totalRbacIssues
+	dashboard.TotalInfraIssues = totalInfraIssues
 
 	// Sort recent reports by update timestamp (newest first)
 	sort.Slice(dashboard.RecentReports, func(i, j int) bool {

@@ -13,7 +13,6 @@ const Navbar = () => {
 
   const menuItems = [
     { label: 'Dashboard', path: '/' },
-    { label: 'Pods', path: '/pods' },
     { label: 'Reports', path: '/reports' },
   ];
 

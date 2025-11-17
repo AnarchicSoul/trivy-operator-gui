@@ -26,6 +26,9 @@ import {
 import BugReportIcon from '@mui/icons-material/BugReport';
 import StorageIcon from '@mui/icons-material/Storage';
 import WarningIcon from '@mui/icons-material/Warning';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import SecurityIcon from '@mui/icons-material/Security';
+import CloudIcon from '@mui/icons-material/Cloud';
 import { getDashboard } from '../services/api';
 
 const SEVERITY_COLORS = {
@@ -96,6 +99,27 @@ const Dashboard = () => {
     { name: 'Low', value: dashboard.configIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
+  const secretData = [
+    { name: 'Critical', value: dashboard.exposedSecretSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.exposedSecretSummary.highCount, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.exposedSecretSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.exposedSecretSummary.lowCount, color: SEVERITY_COLORS.LOW },
+  ].filter(item => item.value > 0);
+
+  const rbacData = [
+    { name: 'Critical', value: dashboard.rbacIssueSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.rbacIssueSummary.highCount, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.rbacIssueSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.rbacIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
+  ].filter(item => item.value > 0);
+
+  const infraData = [
+    { name: 'Critical', value: dashboard.infraIssueSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
+    { name: 'High', value: dashboard.infraIssueSummary.highCount, color: SEVERITY_COLORS.HIGH },
+    { name: 'Medium', value: dashboard.infraIssueSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
+    { name: 'Low', value: dashboard.infraIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
+  ].filter(item => item.value > 0);
+
   const namespaceData = Object.entries(dashboard.podsByNamespace || {}).map(([name, count]) => ({
     namespace: name,
     pods: count,
@@ -109,7 +133,7 @@ const Dashboard = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ bgcolor: '#1976d2', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -122,7 +146,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ bgcolor: '#d32f2f', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -135,7 +159,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ bgcolor: '#f57c00', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -144,6 +168,45 @@ const Dashboard = () => {
                   <Typography variant="h3">{dashboard.totalConfigIssues}</Typography>
                 </Box>
                 <WarningIcon sx={{ fontSize: 60, opacity: 0.3 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ bgcolor: '#9c27b0', color: 'white' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">Exposed Secrets</Typography>
+                  <Typography variant="h3">{dashboard.totalExposedSecrets}</Typography>
+                </Box>
+                <VpnKeyIcon sx={{ fontSize: 60, opacity: 0.3 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ bgcolor: '#00796b', color: 'white' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">RBAC Issues</Typography>
+                  <Typography variant="h3">{dashboard.totalRbacIssues}</Typography>
+                </Box>
+                <SecurityIcon sx={{ fontSize: 60, opacity: 0.3 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ bgcolor: '#0288d1', color: 'white' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">Infra Issues</Typography>
+                  <Typography variant="h3">{dashboard.totalInfraIssues}</Typography>
+                </Box>
+                <CloudIcon sx={{ fontSize: 60, opacity: 0.3 }} />
               </Box>
             </CardContent>
           </Card>
@@ -235,6 +298,93 @@ const Dashboard = () => {
             ) : (
               <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
                 No namespace data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Exposed Secrets by Severity */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Exposed Secrets by Severity
+            </Typography>
+            {secretData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={secretData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#9c27b0">
+                    {secretData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
+                No exposed secret data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* RBAC Issues by Severity */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              RBAC Issues by Severity
+            </Typography>
+            {rbacData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={rbacData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#00796b">
+                    {rbacData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
+                No RBAC issue data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Infrastructure Issues by Severity */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Infrastructure Issues by Severity
+            </Typography>
+            {infraData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={infraData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#0288d1">
+                    {infraData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
+                No infrastructure issue data available
               </Typography>
             )}
           </Paper>

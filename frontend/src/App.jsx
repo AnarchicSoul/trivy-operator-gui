@@ -6,8 +6,6 @@ import Box from '@mui/material/Box';
 
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
-import PodsView from './pages/PodsView';
-import PodDetail from './pages/PodDetail';
 import CategoryView from './pages/CategoryView';
 import ReportsView from './pages/ReportsView';
 
@@ -45,8 +43,6 @@ function App() {
           <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/pods" element={<PodsView />} />
-              <Route path="/pods/:namespace/:podName" element={<PodDetail />} />
               <Route path="/category/:severity" element={<CategoryView />} />
               <Route path="/reports" element={<ReportsView />} />
             </Routes>
