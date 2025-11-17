@@ -52,20 +52,32 @@ Le fichier `trivy-operator-values.yaml` à la racine du projet active les scans 
 
 ### Étape 2 : Déployer Trivy Operator GUI
 
-L'application utilise des images pré-construites disponibles sur Docker Hub sous le compte `johan91`.
+L'application est disponible sur Docker Hub (images et chart Helm) sous le compte `johan91`.
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/AnarchicSoul/trivy-operator-gui.git
-cd trivy-operator-gui
-
-# Déployer avec Helm
-helm install trivy-operator-gui ./helm/trivy-operator-gui \
+# Déployer directement depuis Docker Hub OCI (Helm 3.8+)
+helm install trivy-operator-gui \
+  oci://registry-1.docker.io/johan91/trivy-operator-gui \
+  --version 1.0.0 \
   --namespace trivy-system \
   --create-namespace
 
 # Vérifier le déploiement
 kubectl get pods -n trivy-system -l app.kubernetes.io/name=trivy-operator-gui
+```
+
+**Alternative** : Si vous souhaitez personnaliser les valeurs avant l'installation :
+
+```bash
+# Télécharger le chart
+helm pull oci://registry-1.docker.io/johan91/trivy-operator-gui --version 1.0.0
+tar -xzf trivy-operator-gui-1.0.0.tgz
+
+# Modifier values.yaml selon vos besoins
+# Puis installer
+helm install trivy-operator-gui ./trivy-operator-gui \
+  --namespace trivy-system \
+  --create-namespace
 ```
 
 ### Étape 3 : Accéder à l'interface
@@ -80,10 +92,12 @@ Ouvrez votre navigateur à http://localhost:8080
 
 #### Option 2 : Ingress (production)
 
-Si vous avez un contrôleur Ingress (Traefik, Nginx, etc.), activez l'ingress dans le fichier values :
+Si vous avez un contrôleur Ingress (Traefik, Nginx, etc.), activez l'ingress :
 
 ```bash
-helm upgrade trivy-operator-gui ./helm/trivy-operator-gui \
+helm upgrade trivy-operator-gui \
+  oci://registry-1.docker.io/johan91/trivy-operator-gui \
+  --version 1.0.0 \
   --namespace trivy-system \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=trivy-gui.votredomaine.com \
@@ -156,8 +170,10 @@ helm upgrade trivy-operator aqua/trivy-operator \
   --namespace trivy-system \
   --values trivy-operator-values.yaml
 
-# Mettre à jour le GUI
-helm upgrade trivy-operator-gui ./helm/trivy-operator-gui \
+# Mettre à jour le GUI vers une nouvelle version
+helm upgrade trivy-operator-gui \
+  oci://registry-1.docker.io/johan91/trivy-operator-gui \
+  --version 1.0.0 \
   --namespace trivy-system
 ```
 
