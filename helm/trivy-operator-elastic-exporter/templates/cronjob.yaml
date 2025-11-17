@@ -1,0 +1,107 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "trivy-operator-elastic-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "trivy-operator-elastic-exporter.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.job.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.job.failedJobsHistoryLimit }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "trivy-operator-elastic-exporter.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      backoffLimit: {{ .Values.job.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            {{- include "trivy-operator-elastic-exporter.selectorLabels" . | nindent 12 }}
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "trivy-operator-elastic-exporter.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.job.securityContext | nindent 12 }}
+          restartPolicy: OnFailure
+          containers:
+            - name: exporter
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.job.containerSecurityContext | nindent 16 }}
+              env:
+                # Elasticsearch configuration
+                {{- if .Values.elasticsearch.addresses }}
+                - name: ES_ADDRESSES
+                  value: {{ join "," .Values.elasticsearch.addresses | quote }}
+                {{- end }}
+                - name: ES_INDEX_NAME
+                  value: {{ .Values.elasticsearch.indexName | quote }}
+                {{- if .Values.elasticsearch.createIndexTemplate }}
+                - name: CREATE_INDEX_TEMPLATE
+                  value: "true"
+                {{- end }}
+                {{- if .Values.elasticsearch.retentionDays }}
+                - name: ES_RETENTION_DAYS
+                  value: {{ .Values.elasticsearch.retentionDays | quote }}
+                {{- end }}
+                # Credentials from secret
+                {{- if or .Values.elasticsearch.existingSecret (or .Values.elasticsearch.username .Values.elasticsearch.password .Values.elasticsearch.apiKey .Values.elasticsearch.cloudId) }}
+                - name: ES_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      key: username
+                      optional: true
+                - name: ES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      key: password
+                      optional: true
+                - name: ES_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      key: apiKey
+                      optional: true
+                - name: ES_CLOUD_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      key: cloudId
+                      optional: true
+                {{- end }}
+                # Additional environment variables
+                {{- with .Values.extraEnv }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              resources:
+                {{- toYaml .Values.job.resources | nindent 16 }}
+          {{- with .Values.job.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.job.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.job.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

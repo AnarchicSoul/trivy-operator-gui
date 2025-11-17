@@ -172,6 +172,52 @@ backend:
 - Utilisez les filtres namespace pour cibler un namespace spécifique
 - Les onglets dans les détails du pod séparent les vulnérabilités des problèmes de configuration
 
+## Export vers Elasticsearch (Optionnel)
+
+Pour une analyse avancée et des dashboards personnalisés dans Kibana, vous pouvez utiliser l'**Elastic Exporter** pour exporter automatiquement tous les rapports Trivy vers Elasticsearch en format ECS.
+
+### Fonctionnalités
+
+- Export automatique quotidien (configurable via CronJob)
+- Format ECS (Elastic Common Schema) compatible
+- Support de tous les types de rapports Trivy
+- Dashboards Kibana pré-configurés
+- Gestion automatique de la rétention des données
+- Alertes et visualisations avancées
+
+### Installation
+
+```bash
+# Créer un fichier de configuration
+cat > elastic-values.yaml <<EOF
+elasticsearch:
+  addresses:
+    - "https://elasticsearch.example.com:9200"
+  username: "elastic"
+  password: "changeme"
+  indexName: "trivy-reports"
+  retentionDays: 30
+
+schedule: "0 2 * * *"  # Tous les jours à 2h du matin
+EOF
+
+# Installer l'exporter
+helm install trivy-elastic-exporter \
+  ./helm/trivy-operator-elastic-exporter \
+  -n trivy-system \
+  -f elastic-values.yaml
+```
+
+### Import des dashboards Kibana
+
+1. Créez une Data View dans Kibana : `trivy-reports-*`
+2. Importez les dashboards depuis le dossier `kibana-dashboards/`
+3. Consultez les visualisations pré-configurées
+
+Pour plus de détails, consultez :
+- [`elastic-exporter/README.md`](elastic-exporter/README.md) : Configuration de l'exporter
+- [`kibana-dashboards/README.md`](kibana-dashboards/README.md) : Import et utilisation des dashboards
+
 ## Maintenance
 
 ### Mettre à jour l'application
@@ -207,6 +253,8 @@ Pour contribuer ou modifier l'application, consultez les README dans chaque doss
 - [`frontend/README.md`](frontend/README.md) : Développement du frontend React
 - [`docker/README.md`](docker/README.md) : Build et push des images Docker
 - [`helm/README.md`](helm/README.md) : Package et déploiement Helm
+- [`elastic-exporter/README.md`](elastic-exporter/README.md) : Export vers Elasticsearch
+- [`kibana-dashboards/README.md`](kibana-dashboards/README.md) : Dashboards Kibana
 
 ## Support et Contribution
 

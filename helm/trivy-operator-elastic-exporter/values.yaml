@@ -1,0 +1,129 @@
+# Default values for trivy-operator-elastic-exporter
+
+# CronJob schedule (default: daily at 2 AM)
+schedule: "0 2 * * *"
+
+# Image configuration
+image:
+  repository: johan91/trivy-operator-elastic-exporter
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+
+# ServiceAccount configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC configuration
+rbac:
+  create: true
+  rules:
+    - apiGroups:
+        - "aquasecurity.github.io"
+      resources:
+        - vulnerabilityreports
+        - configauditreports
+        - exposedsecretreports
+        - rbacassessmentreports
+        - clusterinfraassessmentreports
+      verbs:
+        - get
+        - list
+        - watch
+
+# Elasticsearch configuration
+elasticsearch:
+  # Option 1: Direct connection to Elasticsearch cluster
+  # addresses:
+  #   - "https://elasticsearch.example.com:9200"
+
+  # Option 2: Elastic Cloud
+  # cloudId: "my-deployment:dXMtZWFzdC0xLmF3cy5mb3VuZC5pbyRjZWVjYmU5N2U0N2M0MDU3YmQ0NDMzYmRkYzZmZTcxMiQ="
+
+  # Authentication - Option 1: Username/Password
+  # username: "elastic"
+  # password: "changeme"
+
+  # Authentication - Option 2: API Key (recommended)
+  # apiKey: "your-api-key-here"
+
+  # Index configuration
+  indexName: "trivy-reports"
+
+  # Create index template on first run
+  createIndexTemplate: true
+
+  # Retention policy (days) - set to 0 to disable
+  retentionDays: 30
+
+  # Use existing secret for credentials
+  # If specified, username/password/apiKey from above are ignored
+  existingSecret: ""
+  # Keys in the secret:
+  # - username (optional)
+  # - password (optional)
+  # - apiKey (optional)
+  # - cloudId (optional)
+
+# Job configuration
+job:
+  # Number of successful jobs to keep
+  successfulJobsHistoryLimit: 3
+
+  # Number of failed jobs to keep
+  failedJobsHistoryLimit: 1
+
+  # Backoff limit for job retries
+  backoffLimit: 2
+
+  # ActiveDeadlineSeconds - maximum time for job to run
+  activeDeadlineSeconds: 600
+
+  # Resource limits
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Node selector
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # Tolerations
+  tolerations: []
+
+  # Affinity
+  affinity: {}
+
+  # Security context for the pod
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Security context for the container
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 65532
+    capabilities:
+      drop:
+        - ALL
+
+# Pod annotations
+podAnnotations: {}
+
+# Additional environment variables
+extraEnv: []
+# - name: CUSTOM_VAR
+#   value: "custom-value"
