@@ -1,5 +1,13 @@
 # Default values for trivy-operator-gui
 
+# Trivy Operator dependency configuration
+# Set to true to install Trivy Operator as part of this chart
+# If false, you must install Trivy Operator separately
+trivy-operator:
+  enabled: false
+  # When enabled, you can customize Trivy Operator settings here
+  # For full configuration options, see: https://github.com/aquasecurity/trivy-operator/tree/main/deploy/helm
+
 # Backend configuration
 backend:
   image:

@@ -1,0 +1,7 @@
+# This file will be generated when you run:
+# go mod download
+# or
+# go mod tidy
+#
+# To generate this file, run the following from the backend/ directory:
+# go mod download
