@@ -26,64 +26,9 @@ FROM nginx:1.25-alpine
 # Install envsubst (part of gettext package)
 RUN apk add --no-cache gettext
 
-# Create nginx config template
-COPY <<'EOF' /tmp/nginx-template.conf
-server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-
-    # Main location
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # API proxy
-    location /api/ {
-        proxy_pass http://${BACKEND_SERVICE_NAME}:8080/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Health check
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
-EOF
-
-# Create custom entrypoint script
-COPY <<'EOF' /docker-entrypoint.d/40-generate-config.sh
-#!/bin/sh
-set -e
-
-# Generate nginx config from template with environment variable substitution
-echo "Generating nginx configuration with BACKEND_SERVICE_NAME=${BACKEND_SERVICE_NAME}"
-envsubst '${BACKEND_SERVICE_NAME}' < /tmp/nginx-template.conf > /etc/nginx/conf.d/default.conf
-
-echo "Nginx configuration generated successfully"
-cat /etc/nginx/conf.d/default.conf
-EOF
+# Copy nginx config template and entrypoint script
+COPY docker/nginx-template.conf /tmp/nginx-template.conf
+COPY docker/40-generate-config.sh /docker-entrypoint.d/40-generate-config.sh
 
 # Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
