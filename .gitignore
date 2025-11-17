@@ -1,0 +1,79 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Backend build
+backend/trivy-operator-gui-backend
+backend/dist/
+
+# Frontend build
+frontend/dist/
+frontend/build/
+frontend/node_modules/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Helm
+helm/**/charts/
+helm/**/*.tgz
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets (just in case)
+secrets/
+*.key
+*.pem
+*.crt
+!**/.gitkeep

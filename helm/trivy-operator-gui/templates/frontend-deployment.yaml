@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "trivy-operator-gui.fullname" . }}-frontend
+  labels:
+    {{- include "trivy-operator-gui.frontend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "trivy-operator-gui.frontend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "trivy-operator-gui.frontend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: {{ .Values.frontend.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.frontend.securityContext.runAsUser }}
+        fsGroup: {{ .Values.frontend.securityContext.fsGroup }}
+      containers:
+      - name: frontend
+        image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        livenessProbe:
+          {{- toYaml .Values.frontend.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.frontend.readinessProbe | nindent 10 }}
+        resources:
+          {{- toYaml .Values.frontend.resources | nindent 10 }}
+        securityContext:
+          capabilities:
+            {{- toYaml .Values.frontend.securityContext.capabilities | nindent 12 }}
+          readOnlyRootFilesystem: {{ .Values.frontend.securityContext.readOnlyRootFilesystem }}
+          allowPrivilegeEscalation: false
+      {{- with .Values.frontend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

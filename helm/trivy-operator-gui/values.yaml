@@ -1,0 +1,174 @@
+# Default values for trivy-operator-gui
+
+# Backend configuration
+backend:
+  image:
+    repository: trivy-operator-gui-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  replicas: 2
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  # Node selector - preset for Linux nodes only
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  affinity: {}
+  tolerations: []
+
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Liveness and readiness probes
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Frontend configuration
+frontend:
+  image:
+    repository: trivy-operator-gui-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  replicas: 2
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Node selector - preset for Linux nodes only
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  affinity: {}
+  tolerations: []
+
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Liveness and readiness probes
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: trivy-gui.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: trivy-gui-tls
+  #    hosts:
+  #      - trivy-gui.example.com
+
+# ServiceAccount configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "trivy-operator-gui"
+
+# RBAC configuration
+rbac:
+  create: true
+  # ClusterRole permissions for reading Trivy CRDs
+  rules:
+    - apiGroups:
+        - "aquasecurity.github.io"
+      resources:
+        - vulnerabilityreports
+        - configauditreports
+        - exposedsecretreports
+        - rbacassessmentreports
+        - infraassessmentreports
+      verbs:
+        - get
+        - list
+        - watch
+    - apiGroups:
+        - ""
+      resources:
+        - namespaces
+        - pods
+      verbs:
+        - get
+        - list
+
+# Image pull secrets
+imagePullSecrets: []
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security policy
+podSecurityPolicy:
+  enabled: false

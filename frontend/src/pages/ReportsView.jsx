@@ -1,0 +1,314 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Box,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Tabs,
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { getVulnerabilityReports, getConfigAuditReports, getNamespaces } from '../services/api';
+
+const SEVERITY_COLORS = {
+  CRITICAL: '#d32f2f',
+  HIGH: '#f57c00',
+  MEDIUM: '#fbc02d',
+  LOW: '#388e3c',
+  UNKNOWN: '#757575',
+};
+
+const ReportsView = () => {
+  const navigate = useNavigate();
+  const [tabValue, setTabValue] = useState(0);
+  const [vulnReports, setVulnReports] = useState([]);
+  const [configReports, setConfigReports] = useState([]);
+  const [namespaces, setNamespaces] = useState([]);
+  const [selectedNamespace, setSelectedNamespace] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchNamespaces = async () => {
+    try {
+      const response = await getNamespaces();
+      setNamespaces(response.data.namespaces || []);
+    } catch (err) {
+      console.error('Failed to fetch namespaces:', err);
+    }
+  };
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const vulnResponse = await getVulnerabilityReports(selectedNamespace);
+      setVulnReports(vulnResponse.data.items || []);
+
+      const configResponse = await getConfigAuditReports(selectedNamespace);
+      setConfigReports(configResponse.data.items || []);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch reports');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNamespaces();
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [selectedNamespace]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    return new Date(timestamp).toLocaleString();
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">All Reports</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <FormControl sx={{ minWidth: 200 }} size="small">
+            <InputLabel>Namespace</InputLabel>
+            <Select
+              value={selectedNamespace}
+              onChange={(e) => setSelectedNamespace(e.target.value)}
+              label="Namespace"
+            >
+              <MenuItem value="">All Namespaces</MenuItem>
+              {namespaces.map((ns) => (
+                <MenuItem key={ns} value={ns}>
+                  {ns}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <IconButton onClick={fetchReports} color="primary">
+            <RefreshIcon />
+          </IconButton>
+        </Box>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={tabValue} onChange={handleTabChange}>
+          <Tab label={`Vulnerability Reports (${vulnReports.length})`} />
+          <Tab label={`Config Audit Reports (${configReports.length})`} />
+        </Tabs>
+      </Paper>
+
+      {/* Vulnerability Reports Table */}
+      {tabValue === 0 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Namespace</strong></TableCell>
+                <TableCell><strong>Image</strong></TableCell>
+                <TableCell><strong>Scanner</strong></TableCell>
+                <TableCell align="center"><strong>Critical</strong></TableCell>
+                <TableCell align="center"><strong>High</strong></TableCell>
+                <TableCell align="center"><strong>Medium</strong></TableCell>
+                <TableCell align="center"><strong>Low</strong></TableCell>
+                <TableCell><strong>Updated</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {vulnReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No vulnerability reports found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                vulnReports.map((report, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell>{report.metadata.name}</TableCell>
+                    <TableCell>{report.metadata.namespace}</TableCell>
+                    <TableCell>
+                      {report.report.artifact.repository}
+                      {report.report.artifact.tag && `:${report.report.artifact.tag}`}
+                    </TableCell>
+                    <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.criticalCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.criticalCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.highCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.highCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.mediumCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.mediumCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.lowCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.lowCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Config Audit Reports Table */}
+      {tabValue === 1 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Namespace</strong></TableCell>
+                <TableCell><strong>Scanner</strong></TableCell>
+                <TableCell align="center"><strong>Critical</strong></TableCell>
+                <TableCell align="center"><strong>High</strong></TableCell>
+                <TableCell align="center"><strong>Medium</strong></TableCell>
+                <TableCell align="center"><strong>Low</strong></TableCell>
+                <TableCell><strong>Updated</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {configReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No config audit reports found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                configReports.map((report, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell>{report.metadata.name}</TableCell>
+                    <TableCell>{report.metadata.namespace}</TableCell>
+                    <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.criticalCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.criticalCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.highCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.highCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.mediumCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.mediumCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.lowCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.lowCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Container>
+  );
+};
+
+export default ReportsView;
