@@ -30,7 +30,10 @@ export const getConfigAuditReports = (namespace = '') => {
 };
 
 // Pods
-export const getPodsList = () => api.get('/pods');
+export const getPodsList = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/pods', { params });
+};
 
 export const getPodReports = (namespace, podName) =>
   api.get(`/pods/${namespace}/${podName}`);

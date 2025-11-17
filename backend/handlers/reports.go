@@ -65,6 +65,17 @@ func (h *Handler) GetPodReports(c *gin.Context) {
 			for _, check := range report.Report.Checks {
 				if !check.Success {
 					podReports.TotalConfigIssues++
+					// Aggregate config issue counts by severity
+					switch strings.ToUpper(check.Severity) {
+					case "CRITICAL":
+						podReports.ConfigIssueSummary.CriticalCount++
+					case "HIGH":
+						podReports.ConfigIssueSummary.HighCount++
+					case "MEDIUM":
+						podReports.ConfigIssueSummary.MediumCount++
+					case "LOW":
+						podReports.ConfigIssueSummary.LowCount++
+					}
 				}
 			}
 		}
@@ -141,12 +152,31 @@ func (h *Handler) GetReportsByCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, categoryReport)
 }
 
-// GetPodsList returns a list of all pods with vulnerability reports
+// GetPodsList returns a list of all pods with vulnerability reports and configuration issues
 func (h *Handler) GetPodsList(c *gin.Context) {
+	namespace := c.Query("namespace")
 	ctx := context.Background()
 
-	// Get all vulnerability reports
-	vulnReports, err := h.K8sClient.GetAllVulnerabilityReports(ctx)
+	// Get vulnerability reports (filtered by namespace if provided)
+	var vulnReports *models.VulnerabilityReportList
+	var err error
+	if namespace != "" {
+		vulnReports, err = h.K8sClient.GetVulnerabilityReports(ctx, namespace)
+	} else {
+		vulnReports, err = h.K8sClient.GetAllVulnerabilityReports(ctx)
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get config audit reports (filtered by namespace if provided)
+	var configReports *models.ConfigAuditReportList
+	if namespace != "" {
+		configReports, err = h.K8sClient.GetConfigAuditReports(ctx, namespace)
+	} else {
+		configReports, err = h.K8sClient.GetAllConfigAuditReports(ctx)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -155,6 +185,7 @@ func (h *Handler) GetPodsList(c *gin.Context) {
 	// Track unique pods and their summaries
 	podMap := make(map[string]*models.PodReports)
 
+	// Process vulnerability reports
 	for _, report := range vulnReports.Items {
 		podName := extractPodName(report.Name)
 		podKey := report.Namespace + "/" + podName
@@ -164,6 +195,7 @@ func (h *Handler) GetPodsList(c *gin.Context) {
 				PodName:              podName,
 				Namespace:            report.Namespace,
 				VulnerabilityReports: []models.VulnerabilityReport{},
+				ConfigAuditReports:   []models.ConfigAuditReport{},
 			}
 		}
 
@@ -174,6 +206,39 @@ func (h *Handler) GetPodsList(c *gin.Context) {
 		podMap[podKey].VulnerabilitySummary.MediumCount += report.Report.Summary.MediumCount
 		podMap[podKey].VulnerabilitySummary.LowCount += report.Report.Summary.LowCount
 		podMap[podKey].VulnerabilitySummary.UnknownCount += report.Report.Summary.UnknownCount
+	}
+
+	// Process config audit reports
+	for _, report := range configReports.Items {
+		podName := extractPodName(report.Name)
+		podKey := report.Namespace + "/" + podName
+
+		if _, exists := podMap[podKey]; !exists {
+			podMap[podKey] = &models.PodReports{
+				PodName:              podName,
+				Namespace:            report.Namespace,
+				VulnerabilityReports: []models.VulnerabilityReport{},
+				ConfigAuditReports:   []models.ConfigAuditReport{},
+			}
+		}
+
+		podMap[podKey].ConfigAuditReports = append(podMap[podKey].ConfigAuditReports, report)
+		for _, check := range report.Report.Checks {
+			if !check.Success {
+				podMap[podKey].TotalConfigIssues++
+				// Aggregate config issue counts by severity
+				switch strings.ToUpper(check.Severity) {
+				case "CRITICAL":
+					podMap[podKey].ConfigIssueSummary.CriticalCount++
+				case "HIGH":
+					podMap[podKey].ConfigIssueSummary.HighCount++
+				case "MEDIUM":
+					podMap[podKey].ConfigIssueSummary.MediumCount++
+				case "LOW":
+					podMap[podKey].ConfigIssueSummary.LowCount++
+				}
+			}
+		}
 	}
 
 	// Convert map to slice

@@ -16,10 +16,14 @@ import {
   Alert,
   IconButton,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { getPodsList } from '../services/api';
+import { getPodsList, getNamespaces } from '../services/api';
 
 const SEVERITY_COLORS = {
   CRITICAL: '#d32f2f',
@@ -31,15 +35,26 @@ const SEVERITY_COLORS = {
 
 const PodsView = () => {
   const [pods, setPods] = useState([]);
+  const [namespaces, setNamespaces] = useState([]);
+  const [selectedNamespace, setSelectedNamespace] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  const fetchNamespaces = async () => {
+    try {
+      const response = await getNamespaces();
+      setNamespaces(response.data.namespaces || []);
+    } catch (err) {
+      console.error('Failed to fetch namespaces:', err);
+    }
+  };
 
   const fetchPods = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getPodsList();
+      const response = await getPodsList(selectedNamespace);
       setPods(response.data.pods || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch pods');
@@ -49,8 +64,12 @@ const PodsView = () => {
   };
 
   useEffect(() => {
-    fetchPods();
+    fetchNamespaces();
   }, []);
+
+  useEffect(() => {
+    fetchPods();
+  }, [selectedNamespace]);
 
   const handleViewPod = (namespace, podName) => {
     navigate(`/pods/${namespace}/${podName}`);
@@ -65,14 +84,31 @@ const PodsView = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Pods with Vulnerability Reports</Typography>
-        <Tooltip title="Refresh">
-          <IconButton onClick={fetchPods} color="primary">
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
+        <Typography variant="h4">Pods Security Overview</Typography>
+        <Box display="flex" gap={2} alignItems="center">
+          <FormControl sx={{ minWidth: 200 }} size="small">
+            <InputLabel>Namespace</InputLabel>
+            <Select
+              value={selectedNamespace}
+              onChange={(e) => setSelectedNamespace(e.target.value)}
+              label="Namespace"
+            >
+              <MenuItem value="">All Namespaces</MenuItem>
+              {namespaces.map((ns) => (
+                <MenuItem key={ns} value={ns}>
+                  {ns}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Tooltip title="Refresh">
+            <IconButton onClick={fetchPods} color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {error && (
@@ -82,25 +118,43 @@ const PodsView = () => {
       )}
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell><strong>Namespace</strong></TableCell>
               <TableCell><strong>Pod Name</strong></TableCell>
-              <TableCell align="center"><strong>Total Vulnerabilities</strong></TableCell>
+              <TableCell align="center"><strong>Vulnerabilities</strong></TableCell>
+              <TableCell align="center" colSpan={4} sx={{ borderBottom: '2px solid #e0e0e0' }}>
+                <strong>Vulnerability Severity</strong>
+              </TableCell>
+              <TableCell align="center"><strong>Config Issues</strong></TableCell>
+              <TableCell align="center" colSpan={4} sx={{ borderBottom: '2px solid #e0e0e0' }}>
+                <strong>Config Issue Severity</strong>
+              </TableCell>
+              <TableCell align="center"><strong>Actions</strong></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
+              <TableCell></TableCell>
               <TableCell align="center"><strong>Critical</strong></TableCell>
               <TableCell align="center"><strong>High</strong></TableCell>
               <TableCell align="center"><strong>Medium</strong></TableCell>
               <TableCell align="center"><strong>Low</strong></TableCell>
-              <TableCell align="center"><strong>Actions</strong></TableCell>
+              <TableCell></TableCell>
+              <TableCell align="center"><strong>Critical</strong></TableCell>
+              <TableCell align="center"><strong>High</strong></TableCell>
+              <TableCell align="center"><strong>Medium</strong></TableCell>
+              <TableCell align="center"><strong>Low</strong></TableCell>
+              <TableCell></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {pods.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={13} align="center">
                   <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
-                    No pods with vulnerability reports found
+                    No pods found
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -116,13 +170,13 @@ const PodsView = () => {
                   <TableCell>{pod.podName}</TableCell>
                   <TableCell align="center">
                     <Chip
-                      label={pod.totalVulnerabilities}
+                      label={pod.totalVulnerabilities || 0}
                       color={pod.totalVulnerabilities > 0 ? 'error' : 'success'}
                       size="small"
                     />
                   </TableCell>
                   <TableCell align="center">
-                    {pod.vulnerabilitySummary.criticalCount > 0 ? (
+                    {pod.vulnerabilitySummary?.criticalCount > 0 ? (
                       <Chip
                         label={pod.vulnerabilitySummary.criticalCount}
                         size="small"
@@ -133,7 +187,7 @@ const PodsView = () => {
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    {pod.vulnerabilitySummary.highCount > 0 ? (
+                    {pod.vulnerabilitySummary?.highCount > 0 ? (
                       <Chip
                         label={pod.vulnerabilitySummary.highCount}
                         size="small"
@@ -144,7 +198,7 @@ const PodsView = () => {
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    {pod.vulnerabilitySummary.mediumCount > 0 ? (
+                    {pod.vulnerabilitySummary?.mediumCount > 0 ? (
                       <Chip
                         label={pod.vulnerabilitySummary.mediumCount}
                         size="small"
@@ -155,9 +209,60 @@ const PodsView = () => {
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    {pod.vulnerabilitySummary.lowCount > 0 ? (
+                    {pod.vulnerabilitySummary?.lowCount > 0 ? (
                       <Chip
                         label={pod.vulnerabilitySummary.lowCount}
+                        size="small"
+                        sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                      />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={pod.totalConfigIssues || 0}
+                      color={pod.totalConfigIssues > 0 ? 'warning' : 'success'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    {pod.configIssueSummary?.criticalCount > 0 ? (
+                      <Chip
+                        label={pod.configIssueSummary.criticalCount}
+                        size="small"
+                        sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                      />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {pod.configIssueSummary?.highCount > 0 ? (
+                      <Chip
+                        label={pod.configIssueSummary.highCount}
+                        size="small"
+                        sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                      />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {pod.configIssueSummary?.mediumCount > 0 ? (
+                      <Chip
+                        label={pod.configIssueSummary.mediumCount}
+                        size="small"
+                        sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                      />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {pod.configIssueSummary?.lowCount > 0 ? (
+                      <Chip
+                        label={pod.configIssueSummary.lowCount}
                         size="small"
                         sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
                       />

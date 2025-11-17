@@ -23,6 +23,9 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tabs,
+  Tab,
+  Divider,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -43,6 +46,7 @@ const PodDetail = () => {
   const [podReports, setPodReports] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
 
   const fetchPodReports = async () => {
     try {
@@ -112,107 +116,253 @@ const PodDetail = () => {
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Total Vulnerabilities</Typography>
-              <Typography variant="h3">{podReports.totalVulnerabilities}</Typography>
+              <Typography variant="subtitle2" gutterBottom>Total Vulnerabilities</Typography>
+              <Typography variant="h4">{podReports.totalVulnerabilities}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle2" gutterBottom>Total Config Issues</Typography>
+              <Typography variant="h4">{podReports.totalConfigIssues || 0}</Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Critical</Typography>
-              <Typography variant="h3">{podReports.vulnerabilitySummary.criticalCount}</Typography>
+              <Typography variant="subtitle2" gutterBottom>Critical</Typography>
+              <Typography variant="h4">
+                {podReports.vulnerabilitySummary.criticalCount + (podReports.configIssueSummary?.criticalCount || 0)}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>High</Typography>
-              <Typography variant="h3">{podReports.vulnerabilitySummary.highCount}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Medium</Typography>
-              <Typography variant="h3">{podReports.vulnerabilitySummary.mediumCount}</Typography>
+              <Typography variant="subtitle2" gutterBottom>High</Typography>
+              <Typography variant="h4">
+                {podReports.vulnerabilitySummary.highCount + (podReports.configIssueSummary?.highCount || 0)}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+          <Tab label={`Vulnerabilities (${podReports.vulnerabilityReports.length})`} />
+          <Tab label={`Configuration Issues (${podReports.configAuditReports?.length || 0})`} />
+        </Tabs>
+      </Paper>
+
       {/* Vulnerability Reports by Container */}
-      {podReports.vulnerabilityReports.map((report, index) => (
-        <Accordion key={index} defaultExpanded={index === 0} sx={{ mb: 2 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="h6">
-              Container: {report.metadata.name.split('-').pop()} - {report.report.artifact.repository}
-              {report.report.artifact.tag && `:${report.report.artifact.tag}`}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>CVE ID</strong></TableCell>
-                    <TableCell><strong>Package</strong></TableCell>
-                    <TableCell><strong>Installed Version</strong></TableCell>
-                    <TableCell><strong>Fixed Version</strong></TableCell>
-                    <TableCell><strong>Severity</strong></TableCell>
-                    <TableCell><strong>Title</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {report.report.vulnerabilities.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center">
-                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
-                          No vulnerabilities found
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    report.report.vulnerabilities.map((vuln, vIndex) => (
-                      <TableRow key={vIndex}>
-                        <TableCell>
-                          {vuln.primaryLink ? (
-                            <Link href={vuln.primaryLink} target="_blank" rel="noopener">
-                              {vuln.vulnerabilityID}
-                            </Link>
-                          ) : (
-                            vuln.vulnerabilityID
-                          )}
-                        </TableCell>
-                        <TableCell>{vuln.resource}</TableCell>
-                        <TableCell>{vuln.installedVersion}</TableCell>
-                        <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
-                        <TableCell>
+      {tabValue === 0 && (
+        <>
+          <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+            Container Vulnerabilities
+          </Typography>
+          {podReports.vulnerabilityReports.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body2" color="textSecondary">
+                No vulnerability reports found
+              </Typography>
+            </Paper>
+          ) : (
+            podReports.vulnerabilityReports.map((report, index) => (
+              <Accordion key={index} defaultExpanded={index === 0} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box display="flex" justifyContent="space-between" width="100%" alignItems="center" pr={2}>
+                    <Typography variant="h6">
+                      Container: {report.metadata.name.split('-').pop()} - {report.report.artifact.repository}
+                      {report.report.artifact.tag && `:${report.report.artifact.tag}`}
+                    </Typography>
+                    <Box display="flex" gap={1}>
+                      {report.report.summary.criticalCount > 0 && (
+                        <Chip
+                          label={`C: ${report.report.summary.criticalCount}`}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      )}
+                      {report.report.summary.highCount > 0 && (
+                        <Chip
+                          label={`H: ${report.report.summary.highCount}`}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>CVE ID</strong></TableCell>
+                          <TableCell><strong>Package</strong></TableCell>
+                          <TableCell><strong>Installed Version</strong></TableCell>
+                          <TableCell><strong>Fixed Version</strong></TableCell>
+                          <TableCell><strong>Severity</strong></TableCell>
+                          <TableCell><strong>Title</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {report.report.vulnerabilities.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} align="center">
+                              <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                                No vulnerabilities found
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          report.report.vulnerabilities.map((vuln, vIndex) => (
+                            <TableRow key={vIndex}>
+                              <TableCell>
+                                {vuln.primaryLink ? (
+                                  <Link href={vuln.primaryLink} target="_blank" rel="noopener">
+                                    {vuln.vulnerabilityID}
+                                  </Link>
+                                ) : (
+                                  vuln.vulnerabilityID
+                                )}
+                              </TableCell>
+                              <TableCell>{vuln.resource}</TableCell>
+                              <TableCell>{vuln.installedVersion}</TableCell>
+                              <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={vuln.severity}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: SEVERITY_COLORS[vuln.severity.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                                    color: 'white',
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>{vuln.title || 'N/A'}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </AccordionDetails>
+              </Accordion>
+            ))
+          )}
+        </>
+      )}
+
+      {/* Configuration Audit Reports */}
+      {tabValue === 1 && (
+        <>
+          <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+            Configuration Issues
+          </Typography>
+          {!podReports.configAuditReports || podReports.configAuditReports.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body2" color="textSecondary">
+                No configuration audit reports found
+              </Typography>
+            </Paper>
+          ) : (
+            podReports.configAuditReports.map((report, index) => {
+              const failedChecks = report.report.checks?.filter(check => !check.success) || [];
+              return (
+                <Accordion key={index} defaultExpanded={index === 0} sx={{ mb: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box display="flex" justifyContent="space-between" width="100%" alignItems="center" pr={2}>
+                      <Typography variant="h6">
+                        Resource: {report.metadata.name}
+                      </Typography>
+                      <Box display="flex" gap={1}>
+                        {report.report.summary.criticalCount > 0 && (
                           <Chip
-                            label={vuln.severity}
+                            label={`C: ${report.report.summary.criticalCount}`}
                             size="small"
-                            sx={{
-                              bgcolor: SEVERITY_COLORS[vuln.severity.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
-                              color: 'white',
-                            }}
+                            sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
                           />
-                        </TableCell>
-                        <TableCell>{vuln.title || 'N/A'}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </AccordionDetails>
-        </Accordion>
-      ))}
+                        )}
+                        {report.report.summary.highCount > 0 && (
+                          <Chip
+                            label={`H: ${report.report.summary.highCount}`}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                          />
+                        )}
+                        {report.report.summary.mediumCount > 0 && (
+                          <Chip
+                            label={`M: ${report.report.summary.mediumCount}`}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Check ID</strong></TableCell>
+                            <TableCell><strong>Title</strong></TableCell>
+                            <TableCell><strong>Category</strong></TableCell>
+                            <TableCell><strong>Severity</strong></TableCell>
+                            <TableCell><strong>Description</strong></TableCell>
+                            <TableCell><strong>Remediation</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {failedChecks.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center">
+                                <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                                  All checks passed
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            failedChecks.map((check, cIndex) => (
+                              <TableRow key={cIndex}>
+                                <TableCell>{check.checkID}</TableCell>
+                                <TableCell>{check.title}</TableCell>
+                                <TableCell>{check.category}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={check.severity}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: SEVERITY_COLORS[check.severity.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                                      color: 'white',
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ maxWidth: 300 }}>{check.description || 'N/A'}</TableCell>
+                                <TableCell sx={{ maxWidth: 300 }}>{check.remediation || 'N/A'}</TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })
+          )}
+        </>
+      )}
     </Container>
   );
 };
