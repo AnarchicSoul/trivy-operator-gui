@@ -13,8 +13,3 @@ keywords:
 home: https://github.com/trivy-operator-gui/trivy-operator-gui
 maintainers:
   - name: Trivy Operator GUI Team
-dependencies:
-  - name: trivy-operator
-    version: "0.20.0"
-    repository: "https://aquasecurity.github.io/helm-charts/"
-    condition: trivy-operator.enabled
