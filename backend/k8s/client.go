@@ -278,8 +278,12 @@ func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAs
 
 	var reportList models.InfraAssessmentReportList
 	if err := json.Unmarshal(data, &reportList); err != nil {
-		// Log the problematic JSON for debugging
-		return nil, fmt.Errorf("failed to unmarshal clusterinfraassessmentreports (data length: %d bytes): %w", len(data), err)
+		// Log a sample of the problematic JSON for debugging
+		sample := string(data)
+		if len(sample) > 500 {
+			sample = sample[:500] + "..."
+		}
+		return nil, fmt.Errorf("failed to unmarshal clusterinfraassessmentreports (data length: %d bytes, sample: %s): %w", len(data), sample, err)
 	}
 
 	return &reportList, nil
