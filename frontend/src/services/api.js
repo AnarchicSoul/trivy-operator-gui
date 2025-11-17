@@ -29,6 +29,20 @@ export const getConfigAuditReports = (namespace = '') => {
   return api.get('/reports/config-audit', { params });
 };
 
+export const getExposedSecretReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/exposed-secret', { params });
+};
+
+export const getRbacAssessmentReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/rbac-assessment', { params });
+};
+
+export const getInfraAssessmentReports = () => {
+  return api.get('/reports/infra-assessment');
+};
+
 // Pods
 export const getPodsList = (namespace = '') => {
   const params = namespace ? { namespace } : {};

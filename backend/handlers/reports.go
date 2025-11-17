@@ -297,3 +297,62 @@ func (h *Handler) GetConfigAuditReports(c *gin.Context) {
 
 	c.JSON(http.StatusOK, reports)
 }
+
+// GetExposedSecretReports returns all exposed secret reports
+func (h *Handler) GetExposedSecretReports(c *gin.Context) {
+	namespace := c.Query("namespace")
+
+	ctx := context.Background()
+
+	var reports *models.ExposedSecretReportList
+	var err error
+
+	if namespace != "" {
+		reports, err = h.K8sClient.GetExposedSecretReports(ctx, namespace)
+	} else {
+		reports, err = h.K8sClient.GetAllExposedSecretReports(ctx)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}
+
+// GetRbacAssessmentReports returns all RBAC assessment reports
+func (h *Handler) GetRbacAssessmentReports(c *gin.Context) {
+	namespace := c.Query("namespace")
+
+	ctx := context.Background()
+
+	var reports *models.RbacAssessmentReportList
+	var err error
+
+	if namespace != "" {
+		reports, err = h.K8sClient.GetRbacAssessmentReports(ctx, namespace)
+	} else {
+		reports, err = h.K8sClient.GetAllRbacAssessmentReports(ctx)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}
+
+// GetInfraAssessmentReports returns all infrastructure assessment reports
+func (h *Handler) GetInfraAssessmentReports(c *gin.Context) {
+	ctx := context.Background()
+
+	reports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}

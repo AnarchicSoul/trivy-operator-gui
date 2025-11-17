@@ -37,6 +37,20 @@ var (
 		Version:  "v1alpha1",
 		Resource: "exposedsecretreports",
 	}
+
+	// RbacAssessmentReportGVR is the GroupVersionResource for RbacAssessmentReports
+	RbacAssessmentReportGVR = schema.GroupVersionResource{
+		Group:    "aquasecurity.github.io",
+		Version:  "v1alpha1",
+		Resource: "rbacassessmentreports",
+	}
+
+	// InfraAssessmentReportGVR is the GroupVersionResource for InfraAssessmentReports
+	InfraAssessmentReportGVR = schema.GroupVersionResource{
+		Group:    "aquasecurity.github.io",
+		Version:  "v1alpha1",
+		Resource: "infraassessmentreports",
+	}
 )
 
 // Client wraps Kubernetes clients for accessing Trivy reports
@@ -189,4 +203,83 @@ func (c *Client) GetVulnerabilityReportByName(ctx context.Context, namespace, na
 	}
 
 	return &report, nil
+}
+
+// GetExposedSecretReports retrieves all ExposedSecretReports from a namespace
+func (c *Client) GetExposedSecretReports(ctx context.Context, namespace string) (*models.ExposedSecretReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(ExposedSecretReportGVR).
+		Namespace(namespace).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list exposed secret reports: %w", err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal exposed secret reports: %w", err)
+	}
+
+	var reportList models.ExposedSecretReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal exposed secret reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetAllExposedSecretReports retrieves ExposedSecretReports from all namespaces
+func (c *Client) GetAllExposedSecretReports(ctx context.Context) (*models.ExposedSecretReportList, error) {
+	return c.GetExposedSecretReports(ctx, "")
+}
+
+// GetRbacAssessmentReports retrieves all RbacAssessmentReports from a namespace
+func (c *Client) GetRbacAssessmentReports(ctx context.Context, namespace string) (*models.RbacAssessmentReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(RbacAssessmentReportGVR).
+		Namespace(namespace).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list RBAC assessment reports: %w", err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal RBAC assessment reports: %w", err)
+	}
+
+	var reportList models.RbacAssessmentReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal RBAC assessment reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetAllRbacAssessmentReports retrieves RbacAssessmentReports from all namespaces
+func (c *Client) GetAllRbacAssessmentReports(ctx context.Context) (*models.RbacAssessmentReportList, error) {
+	return c.GetRbacAssessmentReports(ctx, "")
+}
+
+// GetInfraAssessmentReports retrieves all InfraAssessmentReports from a namespace (cluster-scoped)
+func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAssessmentReportList, error) {
+	// InfraAssessmentReports are cluster-scoped, so we don't specify a namespace
+	unstructuredList, err := c.DynamicClient.Resource(InfraAssessmentReportGVR).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list infrastructure assessment reports: %w", err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal infrastructure assessment reports: %w", err)
+	}
+
+	var reportList models.InfraAssessmentReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal infrastructure assessment reports: %w", err)
+	}
+
+	return &reportList, nil
 }

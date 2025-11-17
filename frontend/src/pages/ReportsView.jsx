@@ -31,7 +31,14 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
-import { getVulnerabilityReports, getConfigAuditReports, getNamespaces } from '../services/api';
+import {
+  getVulnerabilityReports,
+  getConfigAuditReports,
+  getExposedSecretReports,
+  getRbacAssessmentReports,
+  getInfraAssessmentReports,
+  getNamespaces,
+} from '../services/api';
 
 const SEVERITY_COLORS = {
   CRITICAL: '#d32f2f',
@@ -46,6 +53,9 @@ const ReportsView = () => {
   const [tabValue, setTabValue] = useState(0);
   const [vulnReports, setVulnReports] = useState([]);
   const [configReports, setConfigReports] = useState([]);
+  const [secretReports, setSecretReports] = useState([]);
+  const [rbacReports, setRbacReports] = useState([]);
+  const [infraReports, setInfraReports] = useState([]);
   const [namespaces, setNamespaces] = useState([]);
   const [selectedNamespace, setSelectedNamespace] = useState('');
   const [loading, setLoading] = useState(true);
@@ -72,6 +82,15 @@ const ReportsView = () => {
 
       const configResponse = await getConfigAuditReports(selectedNamespace);
       setConfigReports(configResponse.data.items || []);
+
+      const secretResponse = await getExposedSecretReports(selectedNamespace);
+      setSecretReports(secretResponse.data.items || []);
+
+      const rbacResponse = await getRbacAssessmentReports(selectedNamespace);
+      setRbacReports(rbacResponse.data.items || []);
+
+      const infraResponse = await getInfraAssessmentReports();
+      setInfraReports(infraResponse.data.items || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch reports');
     } finally {
@@ -149,9 +168,12 @@ const ReportsView = () => {
 
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
           <Tab label={`Vulnerability Reports (${vulnReports.length})`} />
-          <Tab label={`Config Audit Reports (${configReports.length})`} />
+          <Tab label={`Config Audit (${configReports.length})`} />
+          <Tab label={`Exposed Secrets (${secretReports.length})`} />
+          <Tab label={`RBAC Assessment (${rbacReports.length})`} />
+          <Tab label={`Infra Assessment (${infraReports.length})`} />
         </Tabs>
       </Paper>
 
@@ -338,6 +360,276 @@ const ReportsView = () => {
         </TableContainer>
       )}
 
+      {/* Exposed Secret Reports Table */}
+      {tabValue === 2 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Namespace</strong></TableCell>
+                <TableCell><strong>Image</strong></TableCell>
+                <TableCell><strong>Scanner</strong></TableCell>
+                <TableCell align="center"><strong>Critical</strong></TableCell>
+                <TableCell align="center"><strong>High</strong></TableCell>
+                <TableCell align="center"><strong>Medium</strong></TableCell>
+                <TableCell align="center"><strong>Low</strong></TableCell>
+                <TableCell><strong>Updated</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {secretReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No exposed secret reports found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                secretReports.map((report, index) => (
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => handleOpenDetail(report)}
+                  >
+                    <TableCell>{report.metadata.name}</TableCell>
+                    <TableCell>{report.metadata.namespace}</TableCell>
+                    <TableCell>
+                      {report.report.artifact?.repository || 'N/A'}
+                      {report.report.artifact?.tag && `:${report.report.artifact.tag}`}
+                    </TableCell>
+                    <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.criticalCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.criticalCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.highCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.highCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.mediumCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.mediumCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.lowCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.lowCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* RBAC Assessment Reports Table */}
+      {tabValue === 3 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Namespace</strong></TableCell>
+                <TableCell><strong>Scanner</strong></TableCell>
+                <TableCell align="center"><strong>Critical</strong></TableCell>
+                <TableCell align="center"><strong>High</strong></TableCell>
+                <TableCell align="center"><strong>Medium</strong></TableCell>
+                <TableCell align="center"><strong>Low</strong></TableCell>
+                <TableCell><strong>Updated</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rbacReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No RBAC assessment reports found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rbacReports.map((report, index) => (
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => handleOpenDetail(report)}
+                  >
+                    <TableCell>{report.metadata.name}</TableCell>
+                    <TableCell>{report.metadata.namespace}</TableCell>
+                    <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.criticalCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.criticalCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.highCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.highCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.mediumCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.mediumCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.lowCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.lowCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {/* Infrastructure Assessment Reports Table */}
+      {tabValue === 4 && (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Scanner</strong></TableCell>
+                <TableCell align="center"><strong>Critical</strong></TableCell>
+                <TableCell align="center"><strong>High</strong></TableCell>
+                <TableCell align="center"><strong>Medium</strong></TableCell>
+                <TableCell align="center"><strong>Low</strong></TableCell>
+                <TableCell><strong>Updated</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {infraReports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No infrastructure assessment reports found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                infraReports.map((report, index) => (
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => handleOpenDetail(report)}
+                  >
+                    <TableCell>{report.metadata.name}</TableCell>
+                    <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.criticalCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.criticalCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.highCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.highCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.HIGH, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.mediumCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.mediumCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {report.report.summary.lowCount > 0 ? (
+                        <Chip
+                          label={report.report.summary.lowCount}
+                          size="small"
+                          sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
       {/* Detail Dialog */}
       <Dialog
         open={detailDialogOpen}
@@ -424,8 +716,68 @@ const ReportsView = () => {
               </Table>
             </TableContainer>
           )}
+          {selectedReport && selectedReport.report.secrets && (
+            /* Exposed Secret Report Details */
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Rule ID</strong></TableCell>
+                    <TableCell><strong>Category</strong></TableCell>
+                    <TableCell><strong>Severity</strong></TableCell>
+                    <TableCell><strong>Title</strong></TableCell>
+                    <TableCell><strong>Target</strong></TableCell>
+                    <TableCell><strong>Match</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedReport.report.secrets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                          No secrets found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReport.report.secrets.map((secret, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{secret.ruleID}</TableCell>
+                        <TableCell>{secret.category}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={secret.severity}
+                            size="small"
+                            sx={{
+                              bgcolor: SEVERITY_COLORS[secret.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                              color: 'white',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{secret.title || 'N/A'}</TableCell>
+                        <TableCell>{secret.target || 'N/A'}</TableCell>
+                        <TableCell sx={{ maxWidth: 300 }}>
+                          <Tooltip title={secret.match || 'N/A'} placement="top">
+                            <Box
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {secret.match || 'N/A'}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
           {selectedReport && selectedReport.report.checks && (
-            /* Config Audit Report Details */
+            /* Config Audit / RBAC / Infra Report Details */
             <TableContainer>
               <Table size="small">
                 <TableHead>

@@ -43,6 +43,9 @@ func main() {
 		api.GET("/reports", handler.GetAllReports)
 		api.GET("/reports/vulnerability", handler.GetVulnerabilityReports)
 		api.GET("/reports/config-audit", handler.GetConfigAuditReports)
+		api.GET("/reports/exposed-secret", handler.GetExposedSecretReports)
+		api.GET("/reports/rbac-assessment", handler.GetRbacAssessmentReports)
+		api.GET("/reports/infra-assessment", handler.GetInfraAssessmentReports)
 
 		// Pods
 		api.GET("/pods", handler.GetPodsList)
