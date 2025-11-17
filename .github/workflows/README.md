@@ -17,11 +17,14 @@ Automatise le build et le push des images Docker vers Docker Hub.
 
 #### Fonctionnalités
 
-- ✅ Build multi-architecture (amd64, arm64)
+- ✅ Build AMD64 (ARM64 désactivé pour performance)
 - ✅ Cache des layers Docker (GitHub Actions cache)
 - ✅ Push automatique vers Docker Hub
 - ✅ Tags automatiques basés sur les branches/tags Git
 - ✅ Build séparé backend et frontend
+
+> **Note sur ARM64** : Les builds ARM64 sont temporairement désactivés pour accélérer le CI/CD (2x plus rapide).
+> Pour réactiver ARM64, modifiez `platforms: linux/amd64` en `platforms: linux/amd64,linux/arm64` dans le workflow.
 
 #### Tags Générés
 
@@ -251,17 +254,50 @@ cache-to: type=gha,mode=max
 
 ### Build Multi-Architecture
 
-Les images supportent AMD64 et ARM64 :
+**Actuellement** : Seul AMD64 est activé pour des builds plus rapides.
+
+Pour réactiver ARM64 (si vous avez besoin de Raspberry Pi, AWS Graviton, etc.) :
 
 ```yaml
-platforms: linux/amd64,linux/arm64
+# Dans docker-build-push.yml
+platforms: linux/amd64,linux/arm64  # Au lieu de linux/amd64
 ```
 
-Désactiver ARM64 si non nécessaire pour accélérer :
+**Note** : Les builds ARM64 doublent le temps de build (≈80s par architecture pour le backend).
 
+### Accélérer les Builds Backend Go
+
+Le backend est lent car `go mod tidy` télécharge toutes les dépendances. Solutions :
+
+**Option 1 : Commiter go.sum (Recommandé)**
+```bash
+cd backend
+go mod tidy
+git add go.sum
+git commit -m "chore: add go.sum for faster builds"
+```
+
+Puis optimiser le Dockerfile :
+```dockerfile
+# Copier go.mod ET go.sum
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+
+# Copier le code
+COPY backend/ ./
+
+# Build SANS go mod tidy (déjà fait)
+RUN CGO_ENABLED=0 GOOS=linux go build -o app .
+```
+
+**Option 2 : Utiliser un Go module proxy**
 ```yaml
-platforms: linux/amd64
+env:
+  GOPROXY: https://proxy.golang.org,direct
 ```
+
+**Option 3 : Accepter le temps de build**
+Le cache GitHub Actions améliorera les builds suivants.
 
 ---
 
