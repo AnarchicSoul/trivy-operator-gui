@@ -11,7 +11,7 @@ trivy-operator:
 # Backend configuration
 backend:
   image:
-    repository: trivy-operator-gui-backend
+    repository: johan91/trivy-operator-gui-backend
     tag: "latest"
     pullPolicy: IfNotPresent
 
@@ -68,7 +68,7 @@ backend:
 # Frontend configuration
 frontend:
   image:
-    repository: trivy-operator-gui-frontend
+    repository: johan91/trivy-operator-gui-frontend
     tag: "latest"
     pullPolicy: IfNotPresent
 
@@ -126,7 +126,7 @@ frontend:
 
 # Ingress configuration
 ingress:
-  enabled: true
+  enabled: false
   className: "traefik"
   annotations: {}
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
