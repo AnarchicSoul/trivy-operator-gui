@@ -202,8 +202,8 @@ schedule: "0 2 * * *"  # Tous les jours à 2h du matin
 EOF
 
 # Installer l'exporter
-helm install trivy-elastic-exporter \
-  ./helm/trivy-operator-elastic-exporter \
+helm install trivy-ecs-exporter \
+  ./helm/trivy-operator-ecs-exporter \
   -n trivy-system \
   -f elastic-values.yaml
 ```
@@ -211,12 +211,12 @@ helm install trivy-elastic-exporter \
 ### Import des dashboards Kibana
 
 1. Créez une Data View dans Kibana : `trivy-reports-*`
-2. Importez les dashboards depuis le dossier `kibana-dashboards/`
+2. Importez les dashboards depuis le dossier `KIBANA-DASHBOARD/`
 3. Consultez les visualisations pré-configurées
 
 Pour plus de détails, consultez :
-- [`elastic-exporter/README.md`](elastic-exporter/README.md) : Configuration de l'exporter
-- [`kibana-dashboards/README.md`](kibana-dashboards/README.md) : Import et utilisation des dashboards
+- [`BINARIES-ECS_EXPORTER/README.md`](BINARIES-ECS_EXPORTER/README.md) : Configuration de l'exporter
+- [`KIBANA-DASHBOARD/README.md`](KIBANA-DASHBOARD/README.md) : Import et utilisation des dashboards
 
 ## Maintenance
 
@@ -249,12 +249,12 @@ helm uninstall trivy-operator -n trivy-system
 
 Pour contribuer ou modifier l'application, consultez les README dans chaque dossier :
 
-- [`backend/README.md`](backend/README.md) : Développement du backend Go
-- [`frontend/README.md`](frontend/README.md) : Développement du frontend React
-- [`docker/README.md`](docker/README.md) : Build et push des images Docker
+- [`BINARIES-BACKEND/README.md`](BINARIES-BACKEND/README.md) : Développement du backend Go
+- [`BINARIES-FRONTEND/README.md`](BINARIES-FRONTEND/README.md) : Développement du frontend React
+- [`DOCKER/README.md`](DOCKER/README.md) : Build et push des images Docker
 - [`helm/README.md`](helm/README.md) : Package et déploiement Helm
-- [`elastic-exporter/README.md`](elastic-exporter/README.md) : Export vers Elasticsearch
-- [`kibana-dashboards/README.md`](kibana-dashboards/README.md) : Dashboards Kibana
+- [`BINARIES-ECS_EXPORTER/README.md`](BINARIES-ECS_EXPORTER/README.md) : Export vers Elasticsearch
+- [`KIBANA-DASHBOARD/README.md`](KIBANA-DASHBOARD/README.md) : Dashboards Kibana
 
 ## Support et Contribution
 

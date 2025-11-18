@@ -37,7 +37,7 @@ Configuration and compliance view:
 
 ## Prerequisites
 
-1. Elasticsearch with Trivy reports indexed (using `trivy-operator-elastic-exporter`)
+1. Elasticsearch with Trivy reports indexed (using `trivy-operator-BINARIES-ECS_EXPORTER`)
 2. Kibana instance connected to the same Elasticsearch cluster
 3. Data view (index pattern) created for `trivy-reports-*`
 
@@ -104,7 +104,7 @@ Dashboards automatically refresh based on the Kibana refresh interval settings. 
 1. **Check data view:** Ensure `trivy-reports-*` data view exists
 2. **Verify data:** Run a search in Discover: `GET trivy-reports-*/_search`
 3. **Check time range:** Adjust the time picker to include your data
-4. **Verify exporter:** Ensure the elastic-exporter CronJob ran successfully
+4. **Verify exporter:** Ensure the BINARIES-ECS_EXPORTER CronJob ran successfully
 
 ### Missing Fields
 
@@ -160,4 +160,4 @@ Apply to the trivy-reports index template.
 For issues or questions:
 - Check the main project README
 - Review Elasticsearch/Kibana logs
-- Verify the elastic-exporter logs: `kubectl logs -n trivy-system <cronjob-pod>`
+- Verify the BINARIES-ECS_EXPORTER logs: `kubectl logs -n trivy-system <cronjob-pod>`

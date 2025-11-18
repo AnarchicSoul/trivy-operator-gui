@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "trivy-operator-elastic-exporter.name" -}}
+{{- define "trivy-operator-ecs-exporter.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "trivy-operator-elastic-exporter.fullname" -}}
+{{- define "trivy-operator-ecs-exporter.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "trivy-operator-elastic-exporter.chart" -}}
+{{- define "trivy-operator-ecs-exporter.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "trivy-operator-elastic-exporter.labels" -}}
-helm.sh/chart: {{ include "trivy-operator-elastic-exporter.chart" . }}
-{{ include "trivy-operator-elastic-exporter.selectorLabels" . }}
+{{- define "trivy-operator-ecs-exporter.labels" -}}
+helm.sh/chart: {{ include "trivy-operator-ecs-exporter.chart" . }}
+{{ include "trivy-operator-ecs-exporter.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "trivy-operator-elastic-exporter.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "trivy-operator-elastic-exporter.name" . }}
+{{- define "trivy-operator-ecs-exporter.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "trivy-operator-ecs-exporter.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "trivy-operator-elastic-exporter.serviceAccountName" -}}
+{{- define "trivy-operator-ecs-exporter.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "trivy-operator-elastic-exporter.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "trivy-operator-ecs-exporter.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -62,10 +62,10 @@ Create the name of the service account to use
 {{/*
 Create the name of the secret to use
 */}}
-{{- define "trivy-operator-elastic-exporter.secretName" -}}
+{{- define "trivy-operator-ecs-exporter.secretName" -}}
 {{- if .Values.elasticsearch.existingSecret }}
 {{- .Values.elasticsearch.existingSecret }}
 {{- else }}
-{{- include "trivy-operator-elastic-exporter.fullname" . }}
+{{- include "trivy-operator-ecs-exporter.fullname" . }}
 {{- end }}
 {{- end }}

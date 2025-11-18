@@ -5,14 +5,14 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /app
 
 # Copy go mod file first to cache dependencies layer
-COPY backend/go.mod ./
+COPY BINARIES-BACKEND/go.mod ./
 
 # Initialize module and download dependencies
 # go mod tidy will generate go.sum automatically
 RUN go mod download
 
 # Copy source code
-COPY backend/ ./
+COPY BINARIES-BACKEND/ ./
 
 # Tidy dependencies (generates/updates go.sum) and build
 RUN go mod tidy && \

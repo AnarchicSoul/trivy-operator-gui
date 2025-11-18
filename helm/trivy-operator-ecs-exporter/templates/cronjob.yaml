@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "trivy-operator-elastic-exporter.fullname" . }}
+  name: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "trivy-operator-elastic-exporter.labels" . | nindent 4 }}
+    {{- include "trivy-operator-BINARIES-ECS_EXPORTER.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.schedule | quote }}
   successfulJobsHistoryLimit: {{ .Values.job.successfulJobsHistoryLimit }}
@@ -13,7 +13,7 @@ spec:
   jobTemplate:
     metadata:
       labels:
-        {{- include "trivy-operator-elastic-exporter.selectorLabels" . | nindent 8 }}
+        {{- include "trivy-operator-BINARIES-ECS_EXPORTER.selectorLabels" . | nindent 8 }}
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
@@ -24,7 +24,7 @@ spec:
       template:
         metadata:
           labels:
-            {{- include "trivy-operator-elastic-exporter.selectorLabels" . | nindent 12 }}
+            {{- include "trivy-operator-BINARIES-ECS_EXPORTER.selectorLabels" . | nindent 12 }}
           {{- with .Values.podAnnotations }}
           annotations:
             {{- toYaml . | nindent 12 }}
@@ -34,7 +34,7 @@ spec:
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          serviceAccountName: {{ include "trivy-operator-elastic-exporter.serviceAccountName" . }}
+          serviceAccountName: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.serviceAccountName" . }}
           securityContext:
             {{- toYaml .Values.job.securityContext | nindent 12 }}
           restartPolicy: OnFailure
@@ -65,25 +65,25 @@ spec:
                 - name: ES_USERNAME
                   valueFrom:
                     secretKeyRef:
-                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      name: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.secretName" . }}
                       key: username
                       optional: true
                 - name: ES_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      name: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.secretName" . }}
                       key: password
                       optional: true
                 - name: ES_API_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      name: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.secretName" . }}
                       key: apiKey
                       optional: true
                 - name: ES_CLOUD_ID
                   valueFrom:
                     secretKeyRef:
-                      name: {{ include "trivy-operator-elastic-exporter.secretName" . }}
+                      name: {{ include "trivy-operator-BINARIES-ECS_EXPORTER.secretName" . }}
                       key: cloudId
                       optional: true
                 {{- end }}

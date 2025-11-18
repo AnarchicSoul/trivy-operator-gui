@@ -22,8 +22,8 @@ helm repo update
 ### Install from Local Chart
 
 ```bash
-helm install trivy-elastic-exporter \
-  ./trivy-operator-elastic-exporter \
+helm install trivy-BINARIES-ECS_EXPORTER \
+  ./trivy-operator-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   --create-namespace
 ```
@@ -45,8 +45,8 @@ schedule: "0 2 * * *"
 EOF
 
 # Install
-helm install trivy-elastic-exporter \
-  ./trivy-operator-elastic-exporter \
+helm install trivy-BINARIES-ECS_EXPORTER \
+  ./trivy-operator-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   -f my-values.yaml
 ```
@@ -157,7 +157,7 @@ rbac:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `schedule` | Cron schedule | `"0 2 * * *"` |
-| `image.repository` | Image repository | `johan91/trivy-operator-elastic-exporter` |
+| `image.repository` | Image repository | `johan91/trivy-operator-BINARIES-ECS_EXPORTER` |
 | `image.tag` | Image tag | `latest` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `elasticsearch.addresses` | Elasticsearch URLs | `[]` |
@@ -183,8 +183,8 @@ rbac:
 ### To 0.2.0 (Example)
 
 ```bash
-helm upgrade trivy-elastic-exporter \
-  ./trivy-operator-elastic-exporter \
+helm upgrade trivy-BINARIES-ECS_EXPORTER \
+  ./trivy-operator-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   -f my-values.yaml
 ```
@@ -192,7 +192,7 @@ helm upgrade trivy-elastic-exporter \
 ## Uninstallation
 
 ```bash
-helm uninstall trivy-elastic-exporter -n trivy-system
+helm uninstall trivy-BINARIES-ECS_EXPORTER -n trivy-system
 ```
 
 This will remove all resources created by the chart. Elasticsearch indices are **not** automatically deleted.
@@ -202,7 +202,7 @@ This will remove all resources created by the chart. Elasticsearch indices are *
 ### Trigger Manual Run
 
 ```bash
-kubectl create job --from=cronjob/trivy-elastic-exporter manual-run-1 \
+kubectl create job --from=cronjob/trivy-BINARIES-ECS_EXPORTER manual-run-1 \
   -n trivy-system
 ```
 
@@ -210,19 +210,19 @@ kubectl create job --from=cronjob/trivy-elastic-exporter manual-run-1 \
 
 ```bash
 kubectl get jobs -n trivy-system
-kubectl get pods -n trivy-system -l app.kubernetes.io/name=trivy-operator-elastic-exporter
+kubectl get pods -n trivy-system -l app.kubernetes.io/name=trivy-operator-BINARIES-ECS_EXPORTER
 ```
 
 ### View Logs
 
 ```bash
-kubectl logs -n trivy-system -l job-name=trivy-elastic-exporter-<timestamp>
+kubectl logs -n trivy-system -l job-name=trivy-BINARIES-ECS_EXPORTER-<timestamp>
 ```
 
 ### Suspend CronJob
 
 ```bash
-kubectl patch cronjob trivy-elastic-exporter \
+kubectl patch cronjob trivy-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   -p '{"spec":{"suspend":true}}'
 ```
@@ -230,7 +230,7 @@ kubectl patch cronjob trivy-elastic-exporter \
 ### Resume CronJob
 
 ```bash
-kubectl patch cronjob trivy-elastic-exporter \
+kubectl patch cronjob trivy-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   -p '{"spec":{"suspend":false}}'
 ```
@@ -331,7 +331,7 @@ serviceAccount:
   create: true
   annotations:
     # For workload identity
-    iam.gke.io/gcp-service-account: elastic-exporter@project.iam
+    iam.gke.io/gcp-service-account: BINARIES-ECS_EXPORTER@project.iam
 
 job:
   securityContext:
@@ -351,8 +351,8 @@ job:
 
 ## Support
 
-- Main docs: See [elastic-exporter/README.md](../../elastic-exporter/README.md)
-- Kibana setup: See [kibana-dashboards/README.md](../../kibana-dashboards/README.md)
+- Main docs: See [BINARIES-ECS_EXPORTER/README.md](../../BINARIES-ECS_EXPORTER/README.md)
+- Kibana setup: See [KIBANA-DASHBOARD/README.md](../../KIBANA-DASHBOARD/README.md)
 - Issues: GitHub Issues
 
 ## License

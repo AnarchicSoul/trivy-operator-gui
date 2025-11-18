@@ -1,4 +1,4 @@
-name: Build and Push Elastic Exporter
+name: Build and Push ECS Exporter
 
 on:
   push:
@@ -6,20 +6,22 @@ on:
       - main
       - master
     paths:
-      - 'elastic-exporter/**'
+      - 'BINARIES-ECS_EXPORTER/**'
+      - 'DOCKER/dockerfile-ecs_exporter'
       - '.github/workflows/elastic-exporter.yml'
   pull_request:
     branches:
       - main
       - master
     paths:
-      - 'elastic-exporter/**'
+      - 'BINARIES-ECS_EXPORTER/**'
+      - 'DOCKER/dockerfile-ecs_exporter'
       - '.github/workflows/elastic-exporter.yml'
   workflow_dispatch:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: johan91/trivy-operator-elastic-exporter
+  IMAGE_NAME: johan91/trivy-operator-ecs-exporter
 
 jobs:
   build-and-push:
@@ -58,7 +60,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./elastic-exporter
+          context: ./BINARIES-ECS_EXPORTER
+          file: ./DOCKER/dockerfile-ecs_exporter
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -82,7 +85,7 @@ jobs:
 
       - name: Package Helm chart
         run: |
-          helm package ./helm/trivy-operator-elastic-exporter \
+          helm package ./helm/trivy-operator-ecs-exporter \
             --destination ./helm-packages
 
       - name: Upload Helm package as artifact
@@ -105,17 +108,17 @@ jobs:
           go-version: '1.21'
 
       - name: Run tests
-        working-directory: ./elastic-exporter
+        working-directory: ./BINARIES-ECS_EXPORTER
         run: |
           go test -v ./...
 
       - name: Run linter
-        working-directory: ./elastic-exporter
+        working-directory: ./BINARIES-ECS_EXPORTER
         run: |
           go vet ./...
 
       - name: Check formatting
-        working-directory: ./elastic-exporter
+        working-directory: ./BINARIES-ECS_EXPORTER
         run: |
           if [ -n "$(gofmt -s -l .)" ]; then
             echo "Go code is not formatted:"

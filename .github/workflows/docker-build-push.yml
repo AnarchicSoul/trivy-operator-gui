@@ -7,9 +7,19 @@ on:
       - develop
     tags:
       - 'v*'
+    paths:
+      - 'BINARIES-BACKEND/**'
+      - 'BINARIES-FRONTEND/**'
+      - 'DOCKER/**'
+      - '.github/workflows/docker-build-push.yml'
   pull_request:
     branches:
       - main
+    paths:
+      - 'BINARIES-BACKEND/**'
+      - 'BINARIES-FRONTEND/**'
+      - 'DOCKER/**'
+      - '.github/workflows/docker-build-push.yml'
   workflow_dispatch:
     inputs:
       tag:
@@ -56,7 +66,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/backend.Dockerfile
+          file: ./DOCKER/dockerfile-backend
           platforms: linux/amd64  # ARM64 désactivé temporairement pour accélérer les builds
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -98,7 +108,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/frontend.Dockerfile
+          file: ./DOCKER/dockerfile-frontend
           platforms: linux/amd64  # ARM64 désactivé temporairement pour accélérer les builds
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -5,14 +5,14 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY frontend/package*.json ./
+COPY BINARIES-FRONTEND/package*.json ./
 
 # Install dependencies
 # Using npm install instead of npm ci since package-lock.json may not exist
 RUN npm install --omit=dev
 
 # Copy source code
-COPY frontend/ ./
+COPY BINARIES-FRONTEND/ ./
 
 # Install dev dependencies for build (vite, etc.)
 RUN npm install
@@ -27,8 +27,8 @@ FROM nginx:1.25-alpine
 RUN apk add --no-cache gettext
 
 # Copy nginx config template and entrypoint script
-COPY docker/nginx-template.conf /tmp/nginx-template.conf
-COPY docker/40-generate-config.sh /docker-entrypoint.d/40-generate-config.sh
+COPY DOCKER/nginx-template.conf /tmp/nginx-template.conf
+COPY DOCKER/40-generate-config.sh /docker-entrypoint.d/40-generate-config.sh
 
 # Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html

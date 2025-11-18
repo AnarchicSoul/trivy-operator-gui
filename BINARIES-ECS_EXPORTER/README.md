@@ -114,8 +114,8 @@ schedule: "0 2 * * *"
 #### 3. Install with Helm
 
 ```bash
-helm install trivy-elastic-exporter \
-  ./helm/trivy-operator-elastic-exporter \
+helm install trivy-BINARIES-ECS_EXPORTER \
+  ./helm/trivy-operator-BINARIES-ECS_EXPORTER \
   -n trivy-system \
   -f values.yaml
 ```
@@ -179,7 +179,7 @@ elasticsearch:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image.repository` | Image repository | `johan91/trivy-operator-elastic-exporter` |
+| `image.repository` | Image repository | `johan91/trivy-operator-BINARIES-ECS_EXPORTER` |
 | `image.tag` | Image tag | `latest` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 
@@ -190,7 +190,7 @@ elasticsearch:
 Trigger a manual export without waiting for the schedule:
 
 ```bash
-kubectl create job --from=cronjob/trivy-elastic-exporter manual-export-1 \
+kubectl create job --from=cronjob/trivy-BINARIES-ECS_EXPORTER manual-export-1 \
   -n trivy-system
 ```
 
@@ -211,7 +211,7 @@ kubectl logs -n trivy-system \
 
 ```bash
 kubectl get cronjob -n trivy-system
-kubectl describe cronjob trivy-elastic-exporter -n trivy-system
+kubectl describe cronjob trivy-BINARIES-ECS_EXPORTER -n trivy-system
 ```
 
 ## ECS Mapping
@@ -282,8 +282,8 @@ kubectl describe cronjob trivy-elastic-exporter -n trivy-system
 
 ### Import Dashboards
 
-1. Navigate to `kibana-dashboards/` directory
-2. Follow instructions in [`kibana-dashboards/README.md`](../kibana-dashboards/README.md)
+1. Navigate to `KIBANA-DASHBOARD/` directory
+2. Follow instructions in [`KIBANA-DASHBOARD/README.md`](../KIBANA-DASHBOARD/README.md)
 3. Import dashboard templates
 4. View pre-built visualizations
 
@@ -322,13 +322,13 @@ event.dataset: "trivy.config-audit" AND event.outcome: "failure"
 
 2. **Check job logs:**
    ```bash
-   kubectl logs -n trivy-system job/trivy-elastic-exporter-<timestamp>
+   kubectl logs -n trivy-system job/trivy-BINARIES-ECS_EXPORTER-<timestamp>
    ```
 
 3. **Verify Elasticsearch connection:**
    ```bash
    # Check if exporter can reach Elasticsearch
-   kubectl exec -n trivy-system job/trivy-elastic-exporter-<timestamp> -- \
+   kubectl exec -n trivy-system job/trivy-BINARIES-ECS_EXPORTER-<timestamp> -- \
      wget -O- https://your-elasticsearch:9200
    ```
 
@@ -364,7 +364,7 @@ kubectl run curl --image=curlimages/curl -i --tty --rm -- \
 2. Manually trigger template creation:
    ```bash
    # Set CREATE_INDEX_TEMPLATE=true in the job
-   kubectl set env cronjob/trivy-elastic-exporter \
+   kubectl set env cronjob/trivy-BINARIES-ECS_EXPORTER \
      CREATE_INDEX_TEMPLATE=true -n trivy-system
    ```
 
@@ -382,7 +382,7 @@ job:
 ### Build Locally
 
 ```bash
-cd elastic-exporter
+cd BINARIES-ECS_EXPORTER
 go build -o exporter ./cmd/exporter
 ```
 
@@ -403,14 +403,14 @@ export CREATE_INDEX_TEMPLATE=true
 ### Build Docker Image
 
 ```bash
-cd elastic-exporter
-docker build -t trivy-operator-elastic-exporter:dev .
+cd BINARIES-ECS_EXPORTER
+docker build -t trivy-operator-BINARIES-ECS_EXPORTER:dev .
 ```
 
 ### Run Tests
 
 ```bash
-cd elastic-exporter
+cd BINARIES-ECS_EXPORTER
 go test -v ./...
 ```
 
@@ -430,7 +430,7 @@ This project is part of trivy-operator-gui and shares the same license.
 
 ## Support
 
-- Documentation: See `kibana-dashboards/README.md` for Kibana setup
+- Documentation: See `KIBANA-DASHBOARD/README.md` for Kibana setup
 - Issues: Report on GitHub Issues
 - Logs: Check CronJob logs for debugging
 
