@@ -13,7 +13,7 @@ type ECSDocument struct {
 	Kubernetes  Kubernetes             `json:"kubernetes,omitempty"`
 	Vulnerability *Vulnerability       `json:"vulnerability,omitempty"`
 	Observer    Observer               `json:"observer"`
-	Labels      map[string]interface{} `json:"labels,omitempty"`
+	Labels      map[string]string      `json:"labels,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
 	Message     string                 `json:"message,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
