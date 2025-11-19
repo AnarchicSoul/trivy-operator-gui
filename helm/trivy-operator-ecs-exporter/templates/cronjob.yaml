@@ -60,6 +60,10 @@ spec:
                 - name: ES_RETENTION_DAYS
                   value: {{ .Values.elasticsearch.retentionDays | quote }}
                 {{- end }}
+                {{- if .Values.elasticsearch.insecureTLS }}
+                - name: ES_INSECURE_TLS
+                  value: "true"
+                {{- end }}
                 # Credentials from secret
                 {{- if or .Values.elasticsearch.existingSecret (or .Values.elasticsearch.username .Values.elasticsearch.password .Values.elasticsearch.apiKey .Values.elasticsearch.cloudId) }}
                 - name: ES_USERNAME

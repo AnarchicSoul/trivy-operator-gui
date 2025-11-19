@@ -59,6 +59,10 @@ elasticsearch:
   # Retention policy (days) - set to 0 to disable
   retentionDays: 30
 
+  # Skip TLS certificate verification (insecure, like curl -k)
+  # Set to true for self-signed certificates or certificate issues
+  insecureTLS: false
+
   # Use existing secret for credentials
   # If specified, username/password/apiKey from above are ignored
   existingSecret: ""

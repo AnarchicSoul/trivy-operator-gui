@@ -3,8 +3,11 @@ package elastic
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -32,6 +35,15 @@ type Client struct {
 func NewClient(config Config) (*Client, error) {
 	cfg := elasticsearch.Config{
 		Addresses: config.Addresses,
+	}
+
+	// Check for insecure TLS option (skip certificate verification)
+	if os.Getenv("ES_INSECURE_TLS") == "true" {
+		cfg.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
 	}
 
 	// Cloud ID takes precedence
