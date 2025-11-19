@@ -8,77 +8,91 @@ This directory contains pre-built Kibana dashboards for visualizing Trivy Operat
 **File:** `trivy-security-overview.ndjson`
 
 A comprehensive dashboard showing:
-- Total vulnerabilities by severity
-- Security issues over time
-- Top vulnerable namespaces and pods
-- Exposed secrets trends
-- RBAC and infrastructure issues
-- Recent security findings
+- **Vulnerabilities by Severity** (Pie Chart) - Distribution of critical/high/medium/low vulnerabilities
+- **Security Issues Over Time** (Area Chart) - Trend of all security issues across different report types
+- **Top Vulnerable Namespaces** (Horizontal Bar) - Namespaces with most vulnerabilities
+- **Critical Vulnerabilities Table** - Detailed list of critical CVEs with package and location info
+
+**Best for:** Quick security overview and executive summary
 
 ### 2. Vulnerability Deep Dive Dashboard
-**File:** `trivy-vulnerability-dashboard.ndjson`
+**File:** `trivy-vulnerability-deep-dive.ndjson`
 
 Detailed vulnerability analysis:
-- CVE distribution and trends
-- Packages with most vulnerabilities
-- CVSS score analysis
-- Fix availability tracking
-- Vulnerability age analysis
+- **CVSS Score Distribution** (Histogram) - Distribution of vulnerability scores
+- **Top Vulnerable Packages** (Horizontal Bar) - Packages appearing most in vulnerability reports
+- **Top CVEs** (Horizontal Bar) - Most common CVEs across your cluster
+- **Vulnerabilities by Image** (Table) - Which container images have the most issues
+
+**Best for:** Vulnerability remediation and package management
 
 ### 3. Compliance Dashboard
-**File:** `trivy-compliance-dashboard.ndjson`
+**File:** `trivy-compliance.ndjson`
 
 Configuration and compliance view:
-- Config audit findings
-- RBAC assessment results
-- Infrastructure security checks
-- Compliance trends over time
-- Critical compliance issues
+- **All Security Issues Timeline** (Area Chart) - Trends for vulnerabilities, config audits, secrets, RBAC, and infrastructure
+- **Config Audit by Category** (Pie Chart) - Distribution of configuration issues
+- **Config Issues by Severity** (Bar Chart) - Severity levels of configuration problems
+- **Exposed Secrets by Type** (Pie Chart) - Types of secrets found
+- **Critical Config Issues Table** - Detailed list of high-severity configuration problems
+
+**Best for:** Compliance monitoring and configuration hardening
 
 ## Prerequisites
 
-1. Elasticsearch with Trivy reports indexed (using `trivy-operator-BINARIES-ECS_EXPORTER`)
+1. Elasticsearch with Trivy reports indexed (using `trivy-operator-ecs-exporter`)
 2. Kibana instance connected to the same Elasticsearch cluster
-3. Data view (index pattern) created for `trivy-reports-*`
+3. Data in Elasticsearch (run the exporter at least once to have data to visualize)
 
-## Import Instructions
+## Quick Start - Import All Dashboards
 
-### Step 1: Create Data View
+### Import via Kibana UI (Recommended)
 
-1. Navigate to **Stack Management** > **Data Views** in Kibana
-2. Click **Create data view**
-3. Configure:
-   - **Name:** `Trivy Reports`
-   - **Index pattern:** `trivy-reports-*`
-   - **Timestamp field:** `@timestamp`
-4. Click **Save data view to Kibana**
+1. **Open Kibana** in your browser
+2. Navigate to **Stack Management** > **Saved Objects**
+3. Click **Import** button
+4. **Drag and drop or select files** - Choose ALL `.ndjson` files from this directory:
+   - `data-view.ndjson` (creates the data view automatically)
+   - `trivy-security-overview.ndjson`
+   - `trivy-vulnerability-deep-dive.ndjson`
+   - `trivy-compliance.ndjson`
+5. Click **Import**
+6. If prompted about conflicts, select **Create new objects with random IDs**
 
-### Step 2: Import Dashboards
+### View Your Dashboards
 
-#### Method 1: Using Kibana UI
+1. Navigate to **Analytics** > **Dashboard**
+2. You should see three dashboards:
+   - **Trivy Security Overview**
+   - **Trivy Vulnerability Deep Dive**
+   - **Trivy Compliance Dashboard**
+3. Click on any dashboard to start visualizing your security data!
 
-1. Navigate to **Stack Management** > **Saved Objects**
-2. Click **Import**
-3. Select one or more `.ndjson` files from this directory
-4. Click **Import**
-5. If prompted about conflicts, choose to overwrite or create new objects
-
-#### Method 2: Using API
+### Import via API (Alternative)
 
 ```bash
-# Import all dashboards at once
-for file in kibana-dashboards/*.ndjson; do
-  curl -X POST "http://localhost:5601/api/saved_objects/_import" \
+# Navigate to the KIBANA-DASHBOARD directory
+cd KIBANA-DASHBOARD
+
+# Import all dashboards
+for file in *.ndjson; do
+  curl -X POST "http://localhost:5601/api/saved_objects/_import?overwrite=true" \
     -H "kbn-xsrf: true" \
     --form file=@"$file"
 done
 ```
 
-### Step 3: View Dashboards
+## Manual Data View Creation (if needed)
 
-1. Navigate to **Analytics** > **Dashboard** in Kibana
-2. Search for "Trivy" to find the imported dashboards
-3. Click on a dashboard to view
+If the data view wasn't created automatically during import:
+
+1. Navigate to **Stack Management** > **Data Views**
+2. Click **Create data view**
+3. Configure:
+   - **Name:** `Trivy Reports`
+   - **Index pattern:** `trivy-reports-*`
+   - **Timestamp field:** `@timestamp`
+4. Click **Save data view**
 
 ## Dashboard Customization
 
