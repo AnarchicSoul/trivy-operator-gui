@@ -38,6 +38,45 @@ Configuration and compliance view:
 
 **Best for:** Compliance monitoring and configuration hardening
 
+### 4. Navigation Dashboards (New!)
+**Files:** Multiple interconnected dashboards with drilldown navigation
+
+A complete hierarchical navigation system that reproduces the frontend application experience:
+
+#### Main Navigation Dashboard
+**File:** `trivy-navigation-main.ndjson`
+- Entry point showing all report types with severity counts
+- Click on any report type to drill down
+
+#### Level 2: Reports by Pod/Resource
+- **Vulnerabilities:** `trivy-vulnerability-pods.ndjson` - Pods with vulnerabilities
+- **Config Audit:** `trivy-configaudit-pods.ndjson` - Pods with config issues
+- **Exposed Secrets:** `trivy-secrets-pods.ndjson` - Pods with exposed secrets
+- **RBAC:** `trivy-rbac-resources.ndjson` - RBAC resources with issues
+- **Infrastructure:** `trivy-infra-resources.ndjson` - Infrastructure resources with issues
+
+Each shows pods/resources grouped by namespace with severity breakdown. Click on any row to see details.
+
+#### Level 3: Alert Details
+- **Vulnerability Details:** `trivy-vulnerability-details.ndjson` - CVE details with descriptions
+- **Config Audit Details:** `trivy-configaudit-details.ndjson` - Configuration check details
+- **Secret Details:** `trivy-secrets-details.ndjson` - Exposed secret details with matches
+- **RBAC Details:** `trivy-rbac-details.ndjson` - RBAC check details
+- **Infrastructure Details:** `trivy-infra-details.ndjson` - Infrastructure check details
+
+Each shows complete alert information including title, description, remediation, and context.
+
+**Navigation Flow:**
+```
+Main Dashboard (Report Types)
+    ↓ (click on report type)
+Pods/Resources with Alerts
+    ↓ (click on pod/resource)
+Alert Details with Messages
+```
+
+**Best for:** Interactive exploration and detailed investigation (like the frontend app!)
+
 ## Prerequisites
 
 1. Elasticsearch with Trivy reports indexed (using `trivy-operator-ecs-exporter`)
@@ -56,17 +95,30 @@ Configuration and compliance view:
    - `trivy-security-overview.ndjson`
    - `trivy-vulnerability-deep-dive.ndjson`
    - `trivy-compliance.ndjson`
+   - **Navigation dashboards** (NEW - import all for full navigation experience):
+     - `trivy-navigation-main.ndjson` (start here!)
+     - `trivy-vulnerability-pods.ndjson` + `trivy-vulnerability-details.ndjson`
+     - `trivy-configaudit-pods.ndjson` + `trivy-configaudit-details.ndjson`
+     - `trivy-secrets-pods.ndjson` + `trivy-secrets-details.ndjson`
+     - `trivy-rbac-resources.ndjson` + `trivy-rbac-details.ndjson`
+     - `trivy-infra-resources.ndjson` + `trivy-infra-details.ndjson`
 5. Click **Import**
 6. If prompted about conflicts, select **Create new objects with random IDs**
 
 ### View Your Dashboards
 
 1. Navigate to **Analytics** > **Dashboard**
-2. You should see three dashboards:
+2. You should see multiple dashboards:
    - **Trivy Security Overview**
    - **Trivy Vulnerability Deep Dive**
    - **Trivy Compliance Dashboard**
+   - **Trivy Reports - Main Navigation** (NEW - start here for interactive exploration!)
+   - Plus all the detail dashboards for navigation
 3. Click on any dashboard to start visualizing your security data!
+
+**Recommended Starting Points:**
+- **Quick Overview:** Start with "Trivy Security Overview"
+- **Interactive Exploration:** Start with "Trivy Reports - Main Navigation" and drill down
 
 ### Import via API (Alternative)
 
