@@ -1,17 +1,34 @@
-═══════════════════════════════════════════════════════
-   EASY IMPORT - ONE SINGLE FILE!
-═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
+   IMPORT FACILE - UN SEUL FICHIER !
+═══════════════════════════════════════════════════════════
 
-1. Open Kibana → Stack Management → Saved Objects
-2. Click "Import"
-3. Drag and drop: trivy-all-dashboards.ndjson
-4. Click "Import"
-5. Done!
+1. Ouvrir Kibana → Stack Management → Saved Objects
+2. Cliquer sur "Import"
+3. Glisser-déposer : trivy-all-dashboards.ndjson
+4. Cliquer sur "Import"
+5. Terminé !
 
-This file contains:
-  ✓ Data View (trivy-reports)
-  ✓ Trivy Security Overview Dashboard
-  ✓ Trivy Vulnerability Deep Dive Dashboard  
-  ✓ Trivy Compliance Dashboard
+Ce fichier contient 15 dashboards :
 
-All dashboards will appear in Analytics → Dashboard
+✓ DASHBOARDS VUE D'ENSEMBLE (3)
+  - Trivy Security Overview
+  - Trivy Vulnerability Deep Dive  
+  - Trivy Compliance Dashboard
+
+✓ DASHBOARDS DE NAVIGATION (11)
+  - Navigation principale (point d'entrée)
+  - Vulnerabilities : Pods + Details
+  - Config Audit : Pods + Details
+  - Exposed Secrets : Pods + Details
+  - RBAC : Resources + Details
+  - Infrastructure : Resources + Details
+
+✓ Data View : trivy-reports
+
+Tous les dashboards apparaîtront dans :
+Analytics → Dashboard
+
+NAVIGATION INTERACTIVE :
+1. Commencer par "Trivy Reports - Navigation"
+2. Cliquer sur un type de rapport → voir les pods/resources
+3. Cliquer sur un pod/resource → voir les détails avec messages
