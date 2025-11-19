@@ -73,6 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -106,6 +108,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
+          cache-dependency-path: BINARIES-ECS_EXPORTER/go.sum
 
       - name: Run tests
         working-directory: ./BINARIES-ECS_EXPORTER
