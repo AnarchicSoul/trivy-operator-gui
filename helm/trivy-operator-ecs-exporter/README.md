@@ -11,19 +11,41 @@ Helm chart for deploying the Trivy Operator Elastic Exporter as a Kubernetes Cro
 
 ## Installation
 
-### Add Helm Repository
+### Option 1: Install from Docker Hub OCI Registry (Recommended)
+
+The chart is available on Docker Hub as an OCI artifact. This is the recommended installation method:
 
 ```bash
-# If using a Helm repository
-helm repo add trivy-operator-gui https://your-repo.com
-helm repo update
+# Install directly from Docker Hub OCI (Helm 3.8+)
+helm install trivy-ecs-exporter \
+  oci://registry-1.docker.io/johan91/trivy-operator-ecs-exporter \
+  --version 1.0.0 \
+  --namespace trivy-system \
+  --create-namespace \
+  --set elasticsearch.addresses[0]="https://elasticsearch.example.com:9200" \
+  --set elasticsearch.username="elastic" \
+  --set elasticsearch.password="changeme"
 ```
 
-### Install from Local Chart
+**Alternative**: Download and customize the chart before installation
 
 ```bash
-helm install trivy-BINARIES-ECS_EXPORTER \
-  ./trivy-operator-BINARIES-ECS_EXPORTER \
+# Download the chart from Docker Hub OCI
+helm pull oci://registry-1.docker.io/johan91/trivy-operator-ecs-exporter --version 1.0.0
+tar -xzf trivy-operator-ecs-exporter-1.0.0.tgz
+
+# Modify values.yaml as needed
+# Then install
+helm install trivy-ecs-exporter ./trivy-operator-ecs-exporter \
+  --namespace trivy-system \
+  --create-namespace
+```
+
+### Option 2: Install from Local Chart
+
+```bash
+helm install trivy-ecs-exporter \
+  ./trivy-operator-ecs-exporter \
   -n trivy-system \
   --create-namespace
 ```
@@ -101,6 +123,41 @@ stringData:
   # cloudId: "your-cloud-id"
 ```
 
+#### Option 4: Self-Signed Certificates (insecureTLS)
+
+If your Elasticsearch uses self-signed certificates or you encounter TLS certificate validation issues, you can skip TLS verification:
+
+```yaml
+elasticsearch:
+  addresses:
+    - "https://elasticsearch.internal:9200"
+  username: "elastic"
+  password: "changeme"
+  indexName: "trivy-reports"
+  # Skip TLS certificate verification (equivalent to curl -k)
+  insecureTLS: true
+```
+
+**Warning**: The `insecureTLS: true` option disables TLS certificate validation (similar to `curl -k` or `--insecure`). Use this only in:
+- Development environments
+- Testing with self-signed certificates
+- Internal networks where certificate validation is not critical
+
+**Never use this option in production environments with public or sensitive data.**
+
+You can also set this via command line:
+
+```bash
+helm install trivy-ecs-exporter \
+  oci://registry-1.docker.io/johan91/trivy-operator-ecs-exporter \
+  --version 1.0.0 \
+  --namespace trivy-system \
+  --set elasticsearch.addresses[0]="https://elasticsearch.internal:9200" \
+  --set elasticsearch.username="elastic" \
+  --set elasticsearch.password="changeme" \
+  --set elasticsearch.insecureTLS=true
+```
+
 ### Schedule Configuration
 
 ```yaml
@@ -168,6 +225,7 @@ rbac:
 | `elasticsearch.indexName` | Index name prefix | `trivy-reports` |
 | `elasticsearch.createIndexTemplate` | Create index template | `true` |
 | `elasticsearch.retentionDays` | Retention in days | `30` |
+| `elasticsearch.insecureTLS` | Skip TLS verification (insecure) | `false` |
 | `elasticsearch.existingSecret` | Existing secret name | `""` |
 | `job.successfulJobsHistoryLimit` | Successful jobs to keep | `3` |
 | `job.failedJobsHistoryLimit` | Failed jobs to keep | `1` |

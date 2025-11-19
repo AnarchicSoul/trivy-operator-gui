@@ -187,6 +187,8 @@ Pour une analyse avancée et des dashboards personnalisés dans Kibana, vous pou
 
 ### Installation
 
+#### Option 1 : Installation depuis le code source
+
 ```bash
 # Créer un fichier de configuration
 cat > elastic-values.yaml <<EOF
@@ -207,6 +209,53 @@ helm install trivy-ecs-exporter \
   -n trivy-system \
   -f elastic-values.yaml
 ```
+
+#### Option 2 : Installation directe depuis Docker Hub OCI (Recommandé)
+
+```bash
+# Déployer directement depuis Docker Hub OCI (Helm 3.8+)
+helm install trivy-ecs-exporter \
+  oci://registry-1.docker.io/johan91/trivy-operator-ecs-exporter \
+  --version 1.0.0 \
+  --namespace trivy-system \
+  --set elasticsearch.addresses[0]="https://elasticsearch.example.com:9200" \
+  --set elasticsearch.username="elastic" \
+  --set elasticsearch.password="changeme"
+```
+
+**Alternative** : Télécharger le chart pour personnalisation
+
+```bash
+# Télécharger le chart
+helm pull oci://registry-1.docker.io/johan91/trivy-operator-ecs-exporter --version 1.0.0
+tar -xzf trivy-operator-ecs-exporter-1.0.0.tgz
+
+# Modifier values.yaml selon vos besoins
+# Puis installer
+helm install trivy-ecs-exporter ./trivy-operator-ecs-exporter \
+  --namespace trivy-system \
+  -f elastic-values.yaml
+```
+
+#### Configuration avancée pour Elasticsearch avec certificats auto-signés
+
+Si votre Elasticsearch utilise des certificats auto-signés ou que vous avez des problèmes de certificats TLS, utilisez l'option `insecureTLS` :
+
+```yaml
+elasticsearch:
+  addresses:
+    - "https://elasticsearch.example.com:9200"
+  username: "elastic"
+  password: "changeme"
+  indexName: "trivy-reports"
+  retentionDays: 30
+  # Skip TLS certificate verification (similaire à curl -k)
+  insecureTLS: true
+
+schedule: "0 2 * * *"
+```
+
+**Note** : L'option `insecureTLS: true` désactive la vérification des certificats TLS (équivalent à `curl -k`). À utiliser uniquement dans les environnements de développement ou avec des certificats auto-signés.
 
 ### Import des dashboards Kibana
 
