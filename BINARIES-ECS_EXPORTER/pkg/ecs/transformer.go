@@ -8,15 +8,15 @@ import (
 
 // ECSDocument represents an Elastic Common Schema document
 type ECSDocument struct {
-	Timestamp   string                 `json:"@timestamp"`
-	Event       Event                  `json:"event"`
-	Kubernetes  Kubernetes             `json:"kubernetes,omitempty"`
-	Vulnerability *Vulnerability       `json:"vulnerability,omitempty"`
-	Observer    Observer               `json:"observer"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
-	Message     string                 `json:"message,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Timestamp     string                 `json:"@timestamp"`
+	Event         Event                  `json:"event"`
+	Kubernetes    Kubernetes             `json:"kubernetes,omitempty"`
+	Vulnerability *Vulnerability         `json:"vulnerability,omitempty"`
+	Observer      Observer               `json:"observer"`
+	Labels        map[string]string      `json:"labels,omitempty"`
+	Tags          []string               `json:"tags,omitempty"`
+	Message       string                 `json:"message,omitempty"`
+	Metadata      map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Event represents ECS event fields
@@ -68,11 +68,11 @@ type Score struct {
 
 // Package represents affected package information
 type Package struct {
-	Name             string `json:"name,omitempty"`
-	Version          string `json:"version,omitempty"`
-	FixedVersion     string `json:"fixed_version,omitempty"`
-	PackageType      string `json:"type,omitempty"`
-	Architecture     string `json:"architecture,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Version      string `json:"version,omitempty"`
+	FixedVersion string `json:"fixed_version,omitempty"`
+	PackageType  string `json:"type,omitempty"`
+	Architecture string `json:"architecture,omitempty"`
 }
 
 // Observer represents the scanner/observer information

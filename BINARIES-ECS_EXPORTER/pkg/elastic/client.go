@@ -228,7 +228,7 @@ func (c *Client) BulkIndexDocuments(ctx context.Context, documents []interface{}
 
 	// Parse response to check for individual item errors
 	var bulkResponse struct {
-		Errors bool `json:"errors"`
+		Errors bool                     `json:"errors"`
 		Items  []map[string]interface{} `json:"items"`
 	}
 
