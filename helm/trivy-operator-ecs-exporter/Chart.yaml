@@ -1,6 +1,6 @@
 apiVersion: v2
-name: trivy-operator-BINARIES-ECS_EXPORTER
-description: A Helm chart for exporting Trivy Operator reports to Elasticsearch in ECS format Trivy Operator reports to Elasticsearch
+name: trivy-operator-ecs-exporter
+description: A Helm chart for exporting Trivy Operator reports to Elasticsearch in ECS format
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

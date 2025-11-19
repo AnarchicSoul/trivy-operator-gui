@@ -67,8 +67,8 @@ schedule: "0 2 * * *"
 EOF
 
 # Install
-helm install trivy-BINARIES-ECS_EXPORTER \
-  ./trivy-operator-BINARIES-ECS_EXPORTER \
+helm install trivy-ecs-exporter \
+  ./trivy-operator-ecs-exporter \
   -n trivy-system \
   -f my-values.yaml
 ```
@@ -214,7 +214,7 @@ rbac:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `schedule` | Cron schedule | `"0 2 * * *"` |
-| `image.repository` | Image repository | `johan91/trivy-operator-BINARIES-ECS_EXPORTER` |
+| `image.repository` | Image repository | `johan91/trivy-operator-ecs-exporter` |
 | `image.tag` | Image tag | `latest` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `elasticsearch.addresses` | Elasticsearch URLs | `[]` |
@@ -241,8 +241,8 @@ rbac:
 ### To 0.2.0 (Example)
 
 ```bash
-helm upgrade trivy-BINARIES-ECS_EXPORTER \
-  ./trivy-operator-BINARIES-ECS_EXPORTER \
+helm upgrade trivy-ecs-exporter \
+  ./trivy-operator-ecs-exporter \
   -n trivy-system \
   -f my-values.yaml
 ```
@@ -250,7 +250,7 @@ helm upgrade trivy-BINARIES-ECS_EXPORTER \
 ## Uninstallation
 
 ```bash
-helm uninstall trivy-BINARIES-ECS_EXPORTER -n trivy-system
+helm uninstall trivy-ecs-exporter -n trivy-system
 ```
 
 This will remove all resources created by the chart. Elasticsearch indices are **not** automatically deleted.
@@ -260,7 +260,7 @@ This will remove all resources created by the chart. Elasticsearch indices are *
 ### Trigger Manual Run
 
 ```bash
-kubectl create job --from=cronjob/trivy-BINARIES-ECS_EXPORTER manual-run-1 \
+kubectl create job --from=cronjob/trivy-ecs-exporter manual-run-1 \
   -n trivy-system
 ```
 
@@ -268,19 +268,19 @@ kubectl create job --from=cronjob/trivy-BINARIES-ECS_EXPORTER manual-run-1 \
 
 ```bash
 kubectl get jobs -n trivy-system
-kubectl get pods -n trivy-system -l app.kubernetes.io/name=trivy-operator-BINARIES-ECS_EXPORTER
+kubectl get pods -n trivy-system -l app.kubernetes.io/name=trivy-operator-ecs-exporter
 ```
 
 ### View Logs
 
 ```bash
-kubectl logs -n trivy-system -l job-name=trivy-BINARIES-ECS_EXPORTER-<timestamp>
+kubectl logs -n trivy-system -l job-name=trivy-ecs-exporter-<timestamp>
 ```
 
 ### Suspend CronJob
 
 ```bash
-kubectl patch cronjob trivy-BINARIES-ECS_EXPORTER \
+kubectl patch cronjob trivy-ecs-exporter \
   -n trivy-system \
   -p '{"spec":{"suspend":true}}'
 ```
@@ -288,7 +288,7 @@ kubectl patch cronjob trivy-BINARIES-ECS_EXPORTER \
 ### Resume CronJob
 
 ```bash
-kubectl patch cronjob trivy-BINARIES-ECS_EXPORTER \
+kubectl patch cronjob trivy-ecs-exporter \
   -n trivy-system \
   -p '{"spec":{"suspend":false}}'
 ```

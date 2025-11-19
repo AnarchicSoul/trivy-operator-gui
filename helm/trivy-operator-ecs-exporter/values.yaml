@@ -1,11 +1,11 @@
-# Default values for trivy-operator-BINARIES-ECS_EXPORTER
+# Default values for trivy-operator-ecs-exporter
 
 # CronJob schedule (default: daily at 2 AM)
 schedule: "0 2 * * *"
 
 # Image configuration
 image:
-  repository: johan91/trivy-operator-BINARIES-ECS_EXPORTER
+  repository: johan91/trivy-operator-ecs-exporter
   pullPolicy: IfNotPresent
   tag: "latest"
 
