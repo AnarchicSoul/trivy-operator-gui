@@ -155,26 +155,49 @@ Ce script crée :
 - Le dashboard unifié avec toutes les visualisations
 - Les références correctes entre les objets
 
-## Corrections apportées (v3)
+## Version finale (v4 - Frontend Style)
 
-Suite aux problèmes rencontrés avec les tables (les graphiques fonctionnaient mais pas les tables), nous avons simplifié les visualisations de tables pour utiliser **UNIQUEMENT les champs ECS de base garantis d'exister** :
+La version finale du dashboard reproduit **exactement l'expérience du frontend** React/MUI :
 
-### Tables simplifiées :
+### Tables style frontend :
 
-**Vulnerability Reports Table** :
-- Colonnes : Namespace + CVE ID + Severity + Count
-- Champs : `kubernetes.namespace`, `vulnerability.id`, `vulnerability.severity`
+Toutes les tables affichent maintenant les **TOP PODS** avec leurs compteurs de sévérité, triés par **CRITICAL décroissant** :
 
-**Autres tables (Config, Secrets, RBAC, Infra)** :
-- Colonnes : Timestamp + Namespace + Count
-- Champs : `@timestamp`, `kubernetes.namespace`
+**Structure des tables** :
+- **Colonne 1** : Pod Name
+- **Colonne 2** : Namespace
+- **Colonne 3** : Critical (count) - **TRI PAR DÉFAUT ↓**
+- **Colonne 4** : High (count)
+- **Colonne 5** : Medium (count)
+- **Colonne 6** : Low (count)
+- **Colonne 7** : Total (count)
 
-### Pourquoi cette simplification ?
+**Filtre interactif** :
+- **Filtre de namespace** en haut du dashboard pour filtrer tous les panneaux
 
-Les tables complexes avec des champs `metadata.*` (comme `metadata.check_id`, `metadata.title`, etc.) peuvent ne pas fonctionner car :
-1. Ces champs sont dans un map/object dans le code, pas des champs ECS standard
-2. Kibana peut avoir du mal à indexer ou agréger sur ces champs nested
-3. Les agrégations multi-termes (plusieurs `terms` en même temps) sont complexes dans Lens
+**Champs utilisés** :
+- `kubernetes.pod.name` - Nom du pod
+- `kubernetes.namespace` - Namespace Kubernetes
+- Compteurs avec filtres sur `tags: critical/high/medium/low` ou `vulnerability.severity`
+
+### Pourquoi cette approche ?
+
+Cette version utilise des **filtered metrics** dans Kibana Lens :
+- Chaque colonne de sévérité est un `count` avec un filtre KQL
+- Le tri se fait sur la colonne Critical en ordre décroissant
+- Reproduction fidèle des tables du frontend (BINARIES-FRONTEND/src/pages/ReportsView.jsx)
+
+## Historique des versions
+
+### v3 (Simplifiée)
+- Tables avec Timestamp + Namespace + Count
+- Garantie de fonctionnement mais peu de détails
+
+### v4 (Frontend Style) - VERSION ACTUELLE ⭐
+- Tables avec Pod + Namespace + Critical + High + Medium + Low + Total
+- Tri par Critical décroissant
+- Filtre de namespace en haut
+- **Reproduction exacte du frontend**
 
 ### Comment voir plus de détails ?
 

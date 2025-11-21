@@ -6,19 +6,34 @@ This directory contains pre-built Kibana dashboards for visualizing Trivy Operat
 
 **File:** `trivy-unified-dashboard.ndjson`
 
-A single, comprehensive dashboard that combines ALL report types in one view - similar to the frontend application!
+A single, comprehensive dashboard that **reproduces exactly the frontend application experience**!
 
 ### What's included:
 - **Summary Metrics** - 6 metric cards showing totals for each report type
 - **Vulnerabilities by Severity** - Pie chart breakdown
 - **Security Issues Timeline** - Trend analysis over time
 - **Top Vulnerable Namespaces** - Bar chart
-- **Detailed Tables** - One table for each report type (Vulnerabilities, Config Audit, Secrets, RBAC, Infra)
+- **Namespace Filter** - Interactive filter at the top
+- **Frontend-Style Tables** - Top pods with severity breakdown (Critical, High, Medium, Low)
+
+### Table Features (v4):
+📊 **Pod + Namespace + Critical + High + Medium + Low + Total**
+🔽 **Sorted by Critical count (descending)**
+🎯 **Just like the React/MUI frontend tables!**
+
+Example table row:
+```
+Pod Name              | Namespace  | Critical | High | Medium | Low | Total
+nginx-deployment-abc  | production |    5     |  12  |   8    |  3  |  28
+redis-master-xyz      | production |    3     |   7  |  15    |  9  |  34
+```
 
 ### Why use the unified dashboard?
 ✅ One dashboard instead of 15 separate ones
 ✅ Uses correct ECS field mappings
-✅ Mimics the frontend application experience
+✅ **Reproduces frontend tables exactly**
+✅ **Top pods by Critical severity**
+✅ Interactive namespace filter
 ✅ All information at a glance
 ✅ Easier to maintain and share
 
