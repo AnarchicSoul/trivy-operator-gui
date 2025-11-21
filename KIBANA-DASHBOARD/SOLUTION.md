@@ -155,12 +155,43 @@ Ce script crée :
 - Le dashboard unifié avec toutes les visualisations
 - Les références correctes entre les objets
 
+## Corrections apportées (v3)
+
+Suite aux problèmes rencontrés avec les tables (les graphiques fonctionnaient mais pas les tables), nous avons simplifié les visualisations de tables pour utiliser **UNIQUEMENT les champs ECS de base garantis d'exister** :
+
+### Tables simplifiées :
+
+**Vulnerability Reports Table** :
+- Colonnes : Namespace + CVE ID + Severity + Count
+- Champs : `kubernetes.namespace`, `vulnerability.id`, `vulnerability.severity`
+
+**Autres tables (Config, Secrets, RBAC, Infra)** :
+- Colonnes : Timestamp + Namespace + Count
+- Champs : `@timestamp`, `kubernetes.namespace`
+
+### Pourquoi cette simplification ?
+
+Les tables complexes avec des champs `metadata.*` (comme `metadata.check_id`, `metadata.title`, etc.) peuvent ne pas fonctionner car :
+1. Ces champs sont dans un map/object dans le code, pas des champs ECS standard
+2. Kibana peut avoir du mal à indexer ou agréger sur ces champs nested
+3. Les agrégations multi-termes (plusieurs `terms` en même temps) sont complexes dans Lens
+
+### Comment voir plus de détails ?
+
+Pour voir les détails complets de chaque alerte, utilisez **Kibana Discover** :
+1. Allez dans Analytics > Discover
+2. Sélectionnez l'index pattern `trivy-reports-*`
+3. Filtrez par `event.dataset: "trivy.config-audit"` (ou autre type)
+4. Vous verrez tous les champs disponibles dans la sidebar
+5. Ajoutez les colonnes que vous voulez voir (message, metadata.*, etc.)
+
 ## Prochaines étapes possibles
 
 1. **Ajouter des filtres interactifs** - Utiliser Kibana Controls pour filtrer par namespace, severity, etc.
 2. **Drilldowns** - Ajouter des drilldowns pour naviguer vers des détails spécifiques
 3. **Alertes** - Configurer des alertes basées sur les seuils de sévérité
 4. **Export PDF** - Permettre l'export du dashboard en PDF pour les rapports
+5. **Saved Searches** - Créer des recherches sauvegardées pour chaque type de rapport avec tous les champs visibles
 
 ## Troubleshooting
 
