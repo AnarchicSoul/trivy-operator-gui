@@ -2,7 +2,31 @@
 
 This directory contains pre-built Kibana dashboards for visualizing Trivy Operator security reports exported to Elasticsearch.
 
-## Dashboard Overview
+## 🎯 Recommended: Unified Dashboard (NEW!)
+
+**File:** `trivy-unified-dashboard.ndjson`
+
+A single, comprehensive dashboard that combines ALL report types in one view - similar to the frontend application!
+
+### What's included:
+- **Summary Metrics** - 6 metric cards showing totals for each report type
+- **Vulnerabilities by Severity** - Pie chart breakdown
+- **Security Issues Timeline** - Trend analysis over time
+- **Top Vulnerable Namespaces** - Bar chart
+- **Detailed Tables** - One table for each report type (Vulnerabilities, Config Audit, Secrets, RBAC, Infra)
+
+### Why use the unified dashboard?
+✅ One dashboard instead of 15 separate ones
+✅ Uses correct ECS field mappings
+✅ Mimics the frontend application experience
+✅ All information at a glance
+✅ Easier to maintain and share
+
+**See `SOLUTION.md` for detailed information about field mappings and troubleshooting.**
+
+---
+
+## Dashboard Overview (Individual Dashboards)
 
 ### 1. Trivy Security Overview Dashboard
 **File:** `trivy-security-overview.ndjson`
