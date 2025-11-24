@@ -74,3 +74,6 @@ secrets/
 *.pem
 *.crt
 !**/.gitkeep
+
+# Binary frontend
+BINARIES-FRONTEND/node_modules/
