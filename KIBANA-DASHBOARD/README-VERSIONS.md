@@ -7,25 +7,41 @@
 - Compatible with: Kibana 10.3.0 and higher
 - Status: Original version, unchanged
 
-### 2. Dashboard V2 for Kibana 7.11.0
-**File:** `trivy-unified-dashboard-v2-k7.ndjson` ✅ **USE THIS ONE**
+### 2. Dashboard V2 for Kibana 7.11.0 (Basic)
+**File:** `trivy-unified-dashboard-v2-k7-basic.ndjson` ✅ **USE THIS FOR KIBANA 7.11.0**
 - Compatible with: Kibana 7.11.0+
-- Object names: `trivy-reports-v2`, `trivy-unified-dashboard-v2`
-- Features: Same as original but with compatibility fixes
+- Object names: `trivy-reports-v2-k7-basic`, `trivy-unified-dashboard-v2-k7-basic`
+- Features: Uses classic visualizations (metric, pie, area, horizontal_bar)
+- **Note:** Simplified dashboard due to Kibana 7.11.0 limitations with Lens visualizations
+- **Includes:**
+  - 5 metric cards (Vulnerabilities, Config Issues, Secrets, RBAC, Infra)
+  - Donut chart for vulnerability severity distribution
+  - Timeline area chart showing security issues over time
+  - Horizontal bar chart of top vulnerable namespaces
 
 ### 3. Dashboard V2 for Kibana 10.2.0
 **File:** `trivy-unified-dashboard-v2.ndjson`
 - Compatible with: Kibana 10.2.0+
 - For users with Kibana 10.x (not 7.x)
+- Object names: `trivy-reports-v2`, `trivy-unified-dashboard-v2`
+- Features: Full Lens-based visualizations with advanced features
 
 ---
 
 ## How to Choose
 
 Check your Kibana version:
-- **Kibana 7.x** → Use `trivy-unified-dashboard-v2-k7.ndjson`
-- **Kibana 8.x-10.2** → Use `trivy-unified-dashboard-v2.ndjson`
+- **Kibana 7.11.0** → Use `trivy-unified-dashboard-v2-k7-basic.ndjson` (classic visualizations)
+- **Kibana 8.x-10.2** → Use `trivy-unified-dashboard-v2.ndjson` (full Lens features)
 - **Kibana 10.3+** → Use `trivy-unified-dashboard.ndjson` (original)
+
+### Important Notes for Kibana 7.11.0 Users:
+
+⚠️ **Lens Incompatibility**: Kibana 7.11.0 does not support the Lens visualization format used in newer dashboards. The error "Cannot read properties of undefined (reading 'layers')" occurs when attempting to import Lens-based dashboards.
+
+✅ **Solution**: Use the basic dashboard (`trivy-unified-dashboard-v2-k7-basic.ndjson`) which uses classic visualization types that are fully compatible with Kibana 7.11.0.
+
+💡 **Recommendation**: For the best experience and full dashboard features, consider upgrading to Kibana 8.x or newer, which has full support for modern Lens visualizations.
 
 ---
 
