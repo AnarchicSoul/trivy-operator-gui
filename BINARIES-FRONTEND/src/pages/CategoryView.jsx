@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Chip,
   Box,
   CircularProgress,
@@ -33,6 +34,7 @@ const SEVERITY_COLORS = {
 };
 
 const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];
+const DEFAULT_ROWS_PER_PAGE = 50;
 
 const CategoryView = () => {
   const { severity } = useParams();
@@ -42,12 +44,17 @@ const CategoryView = () => {
   const [error, setError] = useState(null);
   const [currentSeverity, setCurrentSeverity] = useState(severity?.toUpperCase() || 'CRITICAL');
 
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
+
   const fetchCategoryReport = async (sev) => {
     try {
       setLoading(true);
       setError(null);
       const response = await getReportsByCategory(sev);
       setCategoryReport(response.data);
+      setPage(0); // Reset pagination when data changes
     } catch (err) {
       setError(err.message || 'Failed to fetch category report');
     } finally {
@@ -64,6 +71,15 @@ const CategoryView = () => {
     navigate(`/category/${sev.toLowerCase()}`);
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -72,8 +88,14 @@ const CategoryView = () => {
     );
   }
 
+  const vulnerabilities = categoryReport?.vulnerabilities || [];
+  const paginatedVulnerabilities = vulnerabilities.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
@@ -140,63 +162,77 @@ const CategoryView = () => {
       )}
 
       {/* Vulnerabilities Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>CVE ID</strong></TableCell>
-              <TableCell><strong>Namespace</strong></TableCell>
-              <TableCell><strong>Pod</strong></TableCell>
-              <TableCell><strong>Container</strong></TableCell>
-              <TableCell><strong>Package</strong></TableCell>
-              <TableCell><strong>Installed</strong></TableCell>
-              <TableCell><strong>Fixed</strong></TableCell>
-              <TableCell><strong>Title</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {!categoryReport || categoryReport.vulnerabilities.length === 0 ? (
+      <Paper>
+        <TableContainer>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
-                    No {currentSeverity.toLowerCase()} severity vulnerabilities found
-                  </Typography>
-                </TableCell>
+                <TableCell><strong>CVE ID</strong></TableCell>
+                <TableCell><strong>Namespace</strong></TableCell>
+                <TableCell><strong>Pod</strong></TableCell>
+                <TableCell><strong>Container</strong></TableCell>
+                <TableCell><strong>Package</strong></TableCell>
+                <TableCell><strong>Installed</strong></TableCell>
+                <TableCell><strong>Fixed</strong></TableCell>
+                <TableCell><strong>Title</strong></TableCell>
               </TableRow>
-            ) : (
-              categoryReport.vulnerabilities.map((vuln, index) => (
-                <TableRow key={index} hover>
-                  <TableCell>
-                    {vuln.primaryLink ? (
-                      <Link href={vuln.primaryLink} target="_blank" rel="noopener">
-                        {vuln.vulnerabilityID}
-                      </Link>
-                    ) : (
-                      vuln.vulnerabilityID
-                    )}
-                  </TableCell>
-                  <TableCell>{vuln.namespace}</TableCell>
-                  <TableCell>
-                    <Link
-                      onClick={() => navigate(`/pods/${vuln.namespace}/${vuln.podName}`)}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      {vuln.podName}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{vuln.containerName}</TableCell>
-                  <TableCell>{vuln.resource}</TableCell>
-                  <TableCell>{vuln.installedVersion}</TableCell>
-                  <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
-                  <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {vuln.title || 'N/A'}
+            </TableHead>
+            <TableBody>
+              {vulnerabilities.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                      No {currentSeverity.toLowerCase()} severity vulnerabilities found
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                paginatedVulnerabilities.map((vuln, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell>
+                      {vuln.primaryLink ? (
+                        <Link href={vuln.primaryLink} target="_blank" rel="noopener">
+                          {vuln.vulnerabilityID}
+                        </Link>
+                      ) : (
+                        vuln.vulnerabilityID
+                      )}
+                    </TableCell>
+                    <TableCell>{vuln.namespace}</TableCell>
+                    <TableCell>
+                      <Link
+                        onClick={() => navigate(`/pods/${vuln.namespace}/${vuln.podName}`)}
+                        sx={{ cursor: 'pointer' }}
+                      >
+                        {vuln.podName}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{vuln.containerName}</TableCell>
+                    <TableCell>{vuln.resource}</TableCell>
+                    <TableCell>{vuln.installedVersion}</TableCell>
+                    <TableCell>{vuln.fixedVersion || 'N/A'}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {vuln.title || 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        {vulnerabilities.length > 0 && (
+          <TablePagination
+            component="div"
+            count={vulnerabilities.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Vulnerabilities per page:"
+          />
+        )}
+      </Paper>
     </Container>
   );
 };
