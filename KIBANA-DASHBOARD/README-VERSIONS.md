@@ -7,19 +7,29 @@
 - Compatible with: Kibana 10.3.0 and higher
 - Status: Original version, unchanged
 
-### 2. Dashboard V2 for Kibana 7.11.0 (Basic)
-**File:** `trivy-unified-dashboard-v2-k7-basic.ndjson` ✅ **USE THIS FOR KIBANA 7.11.0**
+### 2. Dashboard V2 Enhanced for Kibana 7.11.0 ⭐ **RECOMMENDED**
+**File:** `trivy-unified-dashboard-v2-k7-enhanced.ndjson` ✅ **USE THIS FOR KIBANA 7.11.0**
+- Compatible with: Kibana 7.11.0+
+- Object names: `trivy-reports-v2-k7-enhanced`, `trivy-unified-dashboard-v2-k7-enhanced`
+- Features: Comprehensive security analysis with classic visualizations
+- **Includes:**
+  - **6 metric cards:** Vulnerabilities, Config Issues, Secrets, RBAC, Infra, Critical Issues
+  - **Issues by Severity:** Universal donut chart using `event.severity_label` (works for all report types)
+  - **CVSS Score Distribution:** Histogram showing vulnerability score ranges
+  - **Issues by Type:** Bar chart showing distribution across datasets
+  - **Timeline by Severity:** Area chart with severity breakdowns over time
+  - **Top 10 CVEs:** Most common vulnerabilities in your cluster
+  - **Top 10 Vulnerable Packages:** Packages with most security issues
+  - **Top Namespaces:** Namespaces with highest issue counts
+
+### 3. Dashboard V2 Basic for Kibana 7.11.0
+**File:** `trivy-unified-dashboard-v2-k7-basic.ndjson`
 - Compatible with: Kibana 7.11.0+
 - Object names: `trivy-reports-v2-k7-basic`, `trivy-unified-dashboard-v2-k7-basic`
-- Features: Uses classic visualizations (metric, pie, area, horizontal_bar)
-- **Note:** Simplified dashboard due to Kibana 7.11.0 limitations with Lens visualizations
-- **Includes:**
-  - 5 metric cards (Vulnerabilities, Config Issues, Secrets, RBAC, Infra)
-  - Donut chart for vulnerability severity distribution
-  - Timeline area chart showing security issues over time
-  - Horizontal bar chart of top vulnerable namespaces
+- Features: Simplified version with essential visualizations only
+- **Use case:** If you prefer a minimal dashboard or the enhanced version is too heavy
 
-### 3. Dashboard V2 for Kibana 10.2.0
+### 4. Dashboard V2 for Kibana 10.2.0
 **File:** `trivy-unified-dashboard-v2.ndjson`
 - Compatible with: Kibana 10.2.0+
 - For users with Kibana 10.x (not 7.x)
@@ -31,7 +41,8 @@
 ## How to Choose
 
 Check your Kibana version:
-- **Kibana 7.11.0** → Use `trivy-unified-dashboard-v2-k7-basic.ndjson` (classic visualizations)
+- **Kibana 7.11.0** → Use `trivy-unified-dashboard-v2-k7-enhanced.ndjson` ⭐ (recommended, comprehensive analysis)
+  - Alternative: `trivy-unified-dashboard-v2-k7-basic.ndjson` (minimal version)
 - **Kibana 8.x-10.2** → Use `trivy-unified-dashboard-v2.ndjson` (full Lens features)
 - **Kibana 10.3+** → Use `trivy-unified-dashboard.ndjson` (original)
 
