@@ -33,8 +33,8 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   getVulnerabilityReports,
   getConfigAuditReports,
@@ -202,7 +202,7 @@ const ReportsView = () => {
         vuln.title || 'N/A',
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: startY,
         head: [['CVE ID', 'Package', 'Installed', 'Fixed', 'Severity', 'Title']],
         body: tableData,
@@ -236,7 +236,7 @@ const ReportsView = () => {
         secret.match || 'N/A',
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: startY,
         head: [['Rule ID', 'Category', 'Severity', 'Title', 'Target', 'Match']],
         body: tableData,
@@ -264,7 +264,7 @@ const ReportsView = () => {
         check.messages?.join('\n') || 'N/A',
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: startY,
         head: [['Check ID', 'Title', 'Category', 'Severity', 'Status', 'Description', 'Message']],
         body: tableData,
