@@ -21,13 +21,14 @@ type ECSDocument struct {
 
 // Event represents ECS event fields
 type Event struct {
-	Kind     string `json:"kind"`
-	Category string `json:"category"`
-	Type     string `json:"type"`
-	Dataset  string `json:"dataset"`
-	Module   string `json:"module"`
-	Outcome  string `json:"outcome,omitempty"`
-	Severity int    `json:"severity,omitempty"`
+	Kind          string `json:"kind"`
+	Category      string `json:"category"`
+	Type          string `json:"type"`
+	Dataset       string `json:"dataset"`
+	Module        string `json:"module"`
+	Outcome       string `json:"outcome,omitempty"`
+	Severity      int    `json:"severity,omitempty"`
+	SeverityLabel string `json:"severity_label,omitempty"`
 }
 
 // Kubernetes represents ECS kubernetes fields
@@ -51,13 +52,15 @@ type Node struct {
 
 // Vulnerability represents ECS vulnerability fields
 type Vulnerability struct {
-	ID          string   `json:"id,omitempty"`
-	Category    []string `json:"category,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Severity    string   `json:"severity,omitempty"`
-	Score       *Score   `json:"score,omitempty"`
-	Reference   string   `json:"reference,omitempty"`
-	Package     *Package `json:"package,omitempty"`
+	ID               string   `json:"id,omitempty"`
+	Category         []string `json:"category,omitempty"`
+	Description      string   `json:"description,omitempty"`
+	Severity         string   `json:"severity,omitempty"`
+	Score            *Score   `json:"score,omitempty"`
+	Reference        string   `json:"reference,omitempty"`
+	Package          *Package `json:"package,omitempty"`
+	PublishedDate    string   `json:"published_date,omitempty"`
+	LastModifiedDate string   `json:"last_modified_date,omitempty"`
 }
 
 // Score represents vulnerability scoring
@@ -154,26 +157,29 @@ func transformVulnerabilityReport(report map[string]interface{}) ([]ECSDocument,
 		doc := ECSDocument{
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Event: Event{
-				Kind:     "alert",
-				Category: "vulnerability",
-				Type:     "indicator",
-				Dataset:  "trivy.vulnerability",
-				Module:   "trivy",
-				Severity: getSeverityNumber(severity),
+				Kind:          "alert",
+				Category:      "vulnerability",
+				Type:          "indicator",
+				Dataset:       "trivy.vulnerability",
+				Module:        "trivy",
+				Severity:      getSeverityNumber(severity),
+				SeverityLabel: strings.ToLower(severity),
 			},
 			Kubernetes: k8s,
 			Vulnerability: &Vulnerability{
-				ID:          getString(v, "vulnerabilityID"),
-				Description: getString(v, "description"),
-				Severity:    strings.ToLower(severity),
-				Score:       getScore(v),
-				Reference:   getString(v, "primaryLink"),
-				Package:     getPackageInfo(v),
+				ID:               getString(v, "vulnerabilityID"),
+				Description:      getString(v, "title"),
+				Severity:         strings.ToLower(severity),
+				Score:            getScore(v),
+				Reference:        getString(v, "primaryLink"),
+				Package:          getPackageInfo(v),
+				PublishedDate:    getString(v, "publishedDate"),
+				LastModifiedDate: getString(v, "lastModifiedDate"),
 			},
 			Observer: scanner,
 			Labels:   metadata.Labels,
 			Tags:     []string{"trivy", "vulnerability", "kubernetes", strings.ToLower(severity)},
-			Message:  fmt.Sprintf("Vulnerability %s found in package %s", getString(v, "vulnerabilityID"), getString(v, "pkgName")),
+			Message:  fmt.Sprintf("Vulnerability %s found in package %s", getString(v, "vulnerabilityID"), getString(v, "resource")),
 		}
 		docs = append(docs, doc)
 	}
@@ -208,28 +214,43 @@ func transformConfigAuditReport(report map[string]interface{}) ([]ECSDocument, e
 
 		if !getBool(c, "success") {
 			severity := getString(c, "severity")
+
+			// Build metadata with all available fields
+			checkMetadata := map[string]interface{}{
+				"check_id":    getString(c, "checkID"),
+				"title":       getString(c, "title"),
+				"description": getString(c, "description"),
+				"category":    getString(c, "category"),
+			}
+
+			// Add messages array if present
+			if messages, ok := c["messages"].([]interface{}); ok && len(messages) > 0 {
+				checkMetadata["messages"] = messages
+			}
+
+			// Add remediation if present
+			if remediation := getString(c, "remediation"); remediation != "" {
+				checkMetadata["remediation"] = remediation
+			}
+
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "configuration",
-					Type:     "info",
-					Dataset:  "trivy.config-audit",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "configuration",
+					Type:          "info",
+					Dataset:       "trivy.config-audit",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
 				Labels:     metadata.Labels,
 				Tags:       []string{"trivy", "config-audit", "kubernetes", strings.ToLower(severity)},
 				Message:    fmt.Sprintf("Config audit failed: %s - %s", getString(c, "checkID"), getString(c, "title")),
-				Metadata: map[string]interface{}{
-					"check_id":    getString(c, "checkID"),
-					"title":       getString(c, "title"),
-					"description": getString(c, "description"),
-					"category":    getString(c, "category"),
-				},
+				Metadata:   checkMetadata,
 			}
 			docs = append(docs, doc)
 		}
@@ -267,13 +288,14 @@ func transformExposedSecretReport(report map[string]interface{}) ([]ECSDocument,
 		doc := ECSDocument{
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Event: Event{
-				Kind:     "alert",
-				Category: "threat",
-				Type:     "indicator",
-				Dataset:  "trivy.exposed-secret",
-				Module:   "trivy",
-				Outcome:  "failure",
-				Severity: getSeverityNumber(severity),
+				Kind:          "alert",
+				Category:      "threat",
+				Type:          "indicator",
+				Dataset:       "trivy.exposed-secret",
+				Module:        "trivy",
+				Outcome:       "failure",
+				Severity:      getSeverityNumber(severity),
+				SeverityLabel: strings.ToLower(severity),
 			},
 			Kubernetes: k8s,
 			Observer:   scanner,
@@ -321,28 +343,43 @@ func transformRbacAssessmentReport(report map[string]interface{}) ([]ECSDocument
 
 		if !getBool(c, "success") {
 			severity := getString(c, "severity")
+
+			// Build metadata with all available fields
+			checkMetadata := map[string]interface{}{
+				"check_id":    getString(c, "checkID"),
+				"title":       getString(c, "title"),
+				"description": getString(c, "description"),
+				"category":    getString(c, "category"),
+			}
+
+			// Add messages array if present
+			if messages, ok := c["messages"].([]interface{}); ok && len(messages) > 0 {
+				checkMetadata["messages"] = messages
+			}
+
+			// Add remediation if present
+			if remediation := getString(c, "remediation"); remediation != "" {
+				checkMetadata["remediation"] = remediation
+			}
+
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "iam",
-					Type:     "info",
-					Dataset:  "trivy.rbac-assessment",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "iam",
+					Type:          "info",
+					Dataset:       "trivy.rbac-assessment",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
 				Labels:     metadata.Labels,
 				Tags:       []string{"trivy", "rbac-assessment", "kubernetes", strings.ToLower(severity)},
 				Message:    fmt.Sprintf("RBAC issue detected: %s - %s", getString(c, "checkID"), getString(c, "title")),
-				Metadata: map[string]interface{}{
-					"check_id":    getString(c, "checkID"),
-					"title":       getString(c, "title"),
-					"description": getString(c, "description"),
-					"category":    getString(c, "category"),
-				},
+				Metadata:   checkMetadata,
 			}
 			docs = append(docs, doc)
 		}
@@ -385,28 +422,43 @@ func transformInfraAssessmentReport(report map[string]interface{}) ([]ECSDocumen
 
 		if !getBool(c, "success") {
 			severity := getString(c, "severity")
+
+			// Build metadata with all available fields
+			checkMetadata := map[string]interface{}{
+				"check_id":    getString(c, "checkID"),
+				"title":       getString(c, "title"),
+				"description": getString(c, "description"),
+				"category":    getString(c, "category"),
+			}
+
+			// Add messages array if present
+			if messages, ok := c["messages"].([]interface{}); ok && len(messages) > 0 {
+				checkMetadata["messages"] = messages
+			}
+
+			// Add remediation if present
+			if remediation := getString(c, "remediation"); remediation != "" {
+				checkMetadata["remediation"] = remediation
+			}
+
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "configuration",
-					Type:     "info",
-					Dataset:  "trivy.infra-assessment",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "configuration",
+					Type:          "info",
+					Dataset:       "trivy.infra-assessment",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
 				Labels:     metadata.Labels,
 				Tags:       []string{"trivy", "infra-assessment", "kubernetes", strings.ToLower(severity)},
 				Message:    fmt.Sprintf("Infrastructure issue detected: %s - %s", getString(c, "checkID"), getString(c, "title")),
-				Metadata: map[string]interface{}{
-					"check_id":    getString(c, "checkID"),
-					"title":       getString(c, "title"),
-					"description": getString(c, "description"),
-					"category":    getString(c, "category"),
-				},
+				Metadata:   checkMetadata,
 			}
 			docs = append(docs, doc)
 		}
@@ -480,6 +532,15 @@ func getScanner(reportData map[string]interface{}) Observer {
 }
 
 func getScore(vuln map[string]interface{}) *Score {
+	// Try to get score directly from the "score" field (Trivy CRD format)
+	if score, ok := vuln["score"].(float64); ok && score > 0 {
+		return &Score{
+			Base:    score,
+			Version: "3.1",
+		}
+	}
+
+	// Fallback: try the old cvss nested structure for backward compatibility
 	if cvss, ok := vuln["cvss"].(map[string]interface{}); ok {
 		for _, v := range cvss {
 			if scoreData, ok := v.(map[string]interface{}); ok {
@@ -497,10 +558,10 @@ func getScore(vuln map[string]interface{}) *Score {
 
 func getPackageInfo(vuln map[string]interface{}) *Package {
 	return &Package{
-		Name:         getString(vuln, "pkgName"),
+		Name:         getString(vuln, "resource"),
 		Version:      getString(vuln, "installedVersion"),
 		FixedVersion: getString(vuln, "fixedVersion"),
-		PackageType:  getString(vuln, "pkgType"),
+		PackageType:  getString(vuln, "packageType"),
 	}
 }
 
