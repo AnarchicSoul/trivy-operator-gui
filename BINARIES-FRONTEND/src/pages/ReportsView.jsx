@@ -33,6 +33,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
+import TableViewIcon from '@mui/icons-material/TableView';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -313,6 +314,78 @@ const ReportsView = () => {
     doc.save(fileName);
   };
 
+  // CSV Export function
+  const exportToCSV = (report, reportType, event) => {
+    event.stopPropagation();
+
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    let headers = [];
+    let rows = [];
+
+    if (report.report.vulnerabilities) {
+      headers = ['CVE ID', 'Package', 'Installed Version', 'Fixed Version', 'Severity', 'Title', 'Primary Link'];
+      rows = report.report.vulnerabilities.map(vuln => [
+        vuln.vulnerabilityID || '',
+        vuln.resource || '',
+        vuln.installedVersion || '',
+        vuln.fixedVersion || '',
+        vuln.severity || '',
+        vuln.title || '',
+        vuln.primaryLink || '',
+      ]);
+    } else if (report.report.secrets) {
+      headers = ['Rule ID', 'Category', 'Severity', 'Title', 'Target', 'Match'];
+      rows = report.report.secrets.map(secret => [
+        secret.ruleID || '',
+        secret.category || '',
+        secret.severity || '',
+        secret.title || '',
+        secret.target || '',
+        secret.match || '',
+      ]);
+    } else if (report.report.checks) {
+      headers = ['Check ID', 'Title', 'Category', 'Severity', 'Status', 'Description', 'Message', 'Remediation'];
+      rows = report.report.checks.filter(check => !check.success).map(check => [
+        check.checkID || '',
+        check.title || '',
+        check.category || '',
+        check.severity || '',
+        'Failed',
+        check.description || '',
+        check.messages?.join(' | ') || '',
+        check.remediation || '',
+      ]);
+    }
+
+    // Build CSV content
+    const csvContent = [
+      `# Trivy Security Report - ${reportType}`,
+      `# Report: ${report.metadata.name}`,
+      `# Namespace: ${report.metadata.namespace || 'N/A'}`,
+      `# Generated: ${new Date().toISOString()}`,
+      `# Summary: Critical=${report.report.summary.criticalCount || 0}, High=${report.report.summary.highCount || 0}, Medium=${report.report.summary.mediumCount || 0}, Low=${report.report.summary.lowCount || 0}`,
+      '',
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `trivy-report-${report.metadata.name}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -381,7 +454,7 @@ const ReportsView = () => {
                   <TableCell align="center"><strong>Medium</strong></TableCell>
                   <TableCell align="center"><strong>Low</strong></TableCell>
                   <TableCell><strong>Updated</strong></TableCell>
-                  <TableCell align="center"><strong>PDF</strong></TableCell>
+                  <TableCell align="center"><strong>Export</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -456,15 +529,26 @@ const ReportsView = () => {
                         </TableCell>
                         <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
                         <TableCell align="center">
-                          <Tooltip title="Download PDF">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={(e) => exportToPDF(report, 'Vulnerability Report', e)}
-                            >
-                              <DownloadIcon />
-                            </IconButton>
-                          </Tooltip>
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Tooltip title="Download PDF">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={(e) => exportToPDF(report, 'Vulnerability Report', e)}
+                              >
+                                <DownloadIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Download CSV">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={(e) => exportToCSV(report, 'Vulnerability Report', e)}
+                              >
+                                <TableViewIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     ))
@@ -503,7 +587,7 @@ const ReportsView = () => {
                   <TableCell align="center"><strong>Medium</strong></TableCell>
                   <TableCell align="center"><strong>Low</strong></TableCell>
                   <TableCell><strong>Updated</strong></TableCell>
-                  <TableCell align="center"><strong>PDF</strong></TableCell>
+                  <TableCell align="center"><strong>Export</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -583,6 +667,15 @@ const ReportsView = () => {
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Download CSV">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={(e) => exportToCSV(report, 'Config Audit Report', e)}
+                            >
+                              <TableViewIcon />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))
@@ -622,7 +715,7 @@ const ReportsView = () => {
                   <TableCell align="center"><strong>Medium</strong></TableCell>
                   <TableCell align="center"><strong>Low</strong></TableCell>
                   <TableCell><strong>Updated</strong></TableCell>
-                  <TableCell align="center"><strong>PDF</strong></TableCell>
+                  <TableCell align="center"><strong>Export</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -706,6 +799,15 @@ const ReportsView = () => {
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Download CSV">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={(e) => exportToCSV(report, 'Exposed Secret Report', e)}
+                            >
+                              <TableViewIcon />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))
@@ -744,7 +846,7 @@ const ReportsView = () => {
                   <TableCell align="center"><strong>Medium</strong></TableCell>
                   <TableCell align="center"><strong>Low</strong></TableCell>
                   <TableCell><strong>Updated</strong></TableCell>
-                  <TableCell align="center"><strong>PDF</strong></TableCell>
+                  <TableCell align="center"><strong>Export</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -824,6 +926,15 @@ const ReportsView = () => {
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Download CSV">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={(e) => exportToCSV(report, 'RBAC Assessment Report', e)}
+                            >
+                              <TableViewIcon />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))
@@ -861,7 +972,7 @@ const ReportsView = () => {
                   <TableCell align="center"><strong>Medium</strong></TableCell>
                   <TableCell align="center"><strong>Low</strong></TableCell>
                   <TableCell><strong>Updated</strong></TableCell>
-                  <TableCell align="center"><strong>PDF</strong></TableCell>
+                  <TableCell align="center"><strong>Export</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -940,6 +1051,15 @@ const ReportsView = () => {
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
+                          <Tooltip title="Download CSV">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={(e) => exportToCSV(report, 'Infrastructure Assessment Report', e)}
+                            >
+                              <TableViewIcon />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))
@@ -975,23 +1095,40 @@ const ReportsView = () => {
             <Typography variant="h6">
               {selectedReport?.metadata.name}
             </Typography>
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {selectedReport && (
-                <Tooltip title="Download PDF">
-                  <IconButton
-                    color="primary"
-                    onClick={(e) => {
-                      const reportType = selectedReport.report.vulnerabilities
-                        ? 'Vulnerability Report'
-                        : selectedReport.report.secrets
-                        ? 'Exposed Secret Report'
-                        : 'Config/RBAC/Infra Report';
-                      exportToPDF(selectedReport, reportType, e);
-                    }}
-                  >
-                    <DownloadIcon />
-                  </IconButton>
-                </Tooltip>
+                <>
+                  <Tooltip title="Download PDF">
+                    <IconButton
+                      color="primary"
+                      onClick={(e) => {
+                        const reportType = selectedReport.report.vulnerabilities
+                          ? 'Vulnerability Report'
+                          : selectedReport.report.secrets
+                          ? 'Exposed Secret Report'
+                          : 'Config/RBAC/Infra Report';
+                        exportToPDF(selectedReport, reportType, e);
+                      }}
+                    >
+                      <DownloadIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Download CSV">
+                    <IconButton
+                      color="success"
+                      onClick={(e) => {
+                        const reportType = selectedReport.report.vulnerabilities
+                          ? 'Vulnerability Report'
+                          : selectedReport.report.secrets
+                          ? 'Exposed Secret Report'
+                          : 'Config/RBAC/Infra Report';
+                        exportToCSV(selectedReport, reportType, e);
+                      }}
+                    >
+                      <TableViewIcon />
+                    </IconButton>
+                  </Tooltip>
+                </>
               )}
               <IconButton onClick={handleCloseDetail} size="small">
                 <CloseIcon />
