@@ -26,7 +26,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Tooltip,
   Link,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -696,18 +695,8 @@ const ReportsView = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell sx={{ maxWidth: 400 }}>
-                          <Tooltip title={vuln.title || 'N/A'} placement="top">
-                            <Box
-                              sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {vuln.title || 'N/A'}
-                            </Box>
-                          </Tooltip>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {vuln.title || 'N/A'}
                         </TableCell>
                       </TableRow>
                     ))
@@ -756,18 +745,8 @@ const ReportsView = () => {
                         </TableCell>
                         <TableCell>{secret.title || 'N/A'}</TableCell>
                         <TableCell>{secret.target || 'N/A'}</TableCell>
-                        <TableCell sx={{ maxWidth: 300 }}>
-                          <Tooltip title={secret.match || 'N/A'} placement="top">
-                            <Box
-                              sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {secret.match || 'N/A'}
-                            </Box>
-                          </Tooltip>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {secret.match || 'N/A'}
                         </TableCell>
                       </TableRow>
                     ))
@@ -788,12 +767,13 @@ const ReportsView = () => {
                     <TableCell><strong>Severity</strong></TableCell>
                     <TableCell><strong>Status</strong></TableCell>
                     <TableCell><strong>Description</strong></TableCell>
+                    <TableCell><strong>Message</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {selectedReport.report.checks.filter(check => !check.success).length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} align="center">
+                      <TableCell colSpan={7} align="center">
                         <Typography variant="body2" color="success.main" sx={{ py: 2 }}>
                           All checks passed!
                         </Typography>
@@ -822,20 +802,13 @@ const ReportsView = () => {
                             color="error"
                           />
                         </TableCell>
-                        <TableCell sx={{ maxWidth: 400 }}>
-                          <Tooltip title={check.description || 'N/A'} placement="top">
-                            <Box
-                              sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                              }}
-                            >
-                              {check.description || 'N/A'}
-                            </Box>
-                          </Tooltip>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {check.description || 'N/A'}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {check.messages && check.messages.length > 0
+                            ? check.messages.join('\n')
+                            : 'N/A'}
                         </TableCell>
                       </TableRow>
                     ))
