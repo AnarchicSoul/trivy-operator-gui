@@ -48,6 +48,12 @@ Complete overhaul of the ECS transformer and Kibana dashboard to fix critical bu
 - **`metadata.messages`**: Array of detailed check messages
 - **`metadata.remediation`**: Remediation instructions for failed checks
 
+#### Universal Severity Field (All Datasets):
+- **`event.severity_label`**: String label for severity (critical, high, medium, low)
+  - Available for ALL report types (vulnerability, config-audit, exposed-secret, rbac-assessment, infra-assessment)
+  - Allows unified filtering and visualization across all security reports
+  - Previously only `vulnerability.severity` existed for vulnerability reports
+
 ---
 
 ## 📊 Kibana Dashboard V2 (`trivy-unified-dashboard-v2.ndjson`)
@@ -134,6 +140,16 @@ KIBANA-DASHBOARD/
 | `metadata.category` | ✅ Working | ✅ Working |
 | `metadata.messages` | ❌ N/A | ✅ **New** |
 | `metadata.remediation` | ❌ N/A | ✅ **New** |
+
+### Universal Fields (All Report Types)
+
+| Field | V1 Status | V2 Status |
+|-------|-----------|-----------|
+| `event.severity` | ✅ Working (numeric) | ✅ Working (numeric) |
+| `event.severity_label` | ❌ **N/A** | ✅ **New** (string) |
+| `tags` | ✅ Working | ✅ Working |
+
+**Note:** `event.severity_label` provides a unified way to filter by severity across all report types without relying on tags or dataset-specific fields.
 
 ---
 

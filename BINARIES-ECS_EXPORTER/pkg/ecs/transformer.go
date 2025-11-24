@@ -21,13 +21,14 @@ type ECSDocument struct {
 
 // Event represents ECS event fields
 type Event struct {
-	Kind     string `json:"kind"`
-	Category string `json:"category"`
-	Type     string `json:"type"`
-	Dataset  string `json:"dataset"`
-	Module   string `json:"module"`
-	Outcome  string `json:"outcome,omitempty"`
-	Severity int    `json:"severity,omitempty"`
+	Kind          string `json:"kind"`
+	Category      string `json:"category"`
+	Type          string `json:"type"`
+	Dataset       string `json:"dataset"`
+	Module        string `json:"module"`
+	Outcome       string `json:"outcome,omitempty"`
+	Severity      int    `json:"severity,omitempty"`
+	SeverityLabel string `json:"severity_label,omitempty"`
 }
 
 // Kubernetes represents ECS kubernetes fields
@@ -156,12 +157,13 @@ func transformVulnerabilityReport(report map[string]interface{}) ([]ECSDocument,
 		doc := ECSDocument{
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Event: Event{
-				Kind:     "alert",
-				Category: "vulnerability",
-				Type:     "indicator",
-				Dataset:  "trivy.vulnerability",
-				Module:   "trivy",
-				Severity: getSeverityNumber(severity),
+				Kind:          "alert",
+				Category:      "vulnerability",
+				Type:          "indicator",
+				Dataset:       "trivy.vulnerability",
+				Module:        "trivy",
+				Severity:      getSeverityNumber(severity),
+				SeverityLabel: strings.ToLower(severity),
 			},
 			Kubernetes: k8s,
 			Vulnerability: &Vulnerability{
@@ -234,13 +236,14 @@ func transformConfigAuditReport(report map[string]interface{}) ([]ECSDocument, e
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "configuration",
-					Type:     "info",
-					Dataset:  "trivy.config-audit",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "configuration",
+					Type:          "info",
+					Dataset:       "trivy.config-audit",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
@@ -285,13 +288,14 @@ func transformExposedSecretReport(report map[string]interface{}) ([]ECSDocument,
 		doc := ECSDocument{
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Event: Event{
-				Kind:     "alert",
-				Category: "threat",
-				Type:     "indicator",
-				Dataset:  "trivy.exposed-secret",
-				Module:   "trivy",
-				Outcome:  "failure",
-				Severity: getSeverityNumber(severity),
+				Kind:          "alert",
+				Category:      "threat",
+				Type:          "indicator",
+				Dataset:       "trivy.exposed-secret",
+				Module:        "trivy",
+				Outcome:       "failure",
+				Severity:      getSeverityNumber(severity),
+				SeverityLabel: strings.ToLower(severity),
 			},
 			Kubernetes: k8s,
 			Observer:   scanner,
@@ -361,13 +365,14 @@ func transformRbacAssessmentReport(report map[string]interface{}) ([]ECSDocument
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "iam",
-					Type:     "info",
-					Dataset:  "trivy.rbac-assessment",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "iam",
+					Type:          "info",
+					Dataset:       "trivy.rbac-assessment",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
@@ -439,13 +444,14 @@ func transformInfraAssessmentReport(report map[string]interface{}) ([]ECSDocumen
 			doc := ECSDocument{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				Event: Event{
-					Kind:     "alert",
-					Category: "configuration",
-					Type:     "info",
-					Dataset:  "trivy.infra-assessment",
-					Module:   "trivy",
-					Outcome:  "failure",
-					Severity: getSeverityNumber(severity),
+					Kind:          "alert",
+					Category:      "configuration",
+					Type:          "info",
+					Dataset:       "trivy.infra-assessment",
+					Module:        "trivy",
+					Outcome:       "failure",
+					Severity:      getSeverityNumber(severity),
+					SeverityLabel: strings.ToLower(severity),
 				},
 				Kubernetes: k8s,
 				Observer:   scanner,
