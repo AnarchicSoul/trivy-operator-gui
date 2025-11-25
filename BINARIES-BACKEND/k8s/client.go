@@ -383,3 +383,113 @@ func (c *Client) GetComplianceReports(ctx context.Context) (*models.ComplianceRe
 
 	return &reportList, nil
 }
+
+// GetVulnerabilityReportsLimited retrieves a limited number of VulnerabilityReports from all namespaces
+// This is useful for dashboard statistics without loading all detailed data
+func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, limit int64) (*models.VulnerabilityReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(VulnerabilityReportGVR).
+		Namespace("").
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list vulnerability reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal vulnerability reports: %w", err)
+	}
+
+	var reportList models.VulnerabilityReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal vulnerability reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetConfigAuditReportsLimited retrieves a limited number of ConfigAuditReports from all namespaces
+func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, limit int64) (*models.ConfigAuditReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(ConfigAuditReportGVR).
+		Namespace("").
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list config audit reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config audit reports: %w", err)
+	}
+
+	var reportList models.ConfigAuditReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config audit reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetExposedSecretReportsLimited retrieves a limited number of ExposedSecretReports from all namespaces
+func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, limit int64) (*models.ExposedSecretReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(ExposedSecretReportGVR).
+		Namespace("").
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list exposed secret reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal exposed secret reports: %w", err)
+	}
+
+	var reportList models.ExposedSecretReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal exposed secret reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetRbacAssessmentReportsLimited retrieves a limited number of RbacAssessmentReports from all namespaces
+func (c *Client) GetRbacAssessmentReportsLimited(ctx context.Context, limit int64) (*models.RbacAssessmentReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(RbacAssessmentReportGVR).
+		Namespace("").
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list RBAC assessment reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal RBAC assessment reports: %w", err)
+	}
+
+	var reportList models.RbacAssessmentReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal RBAC assessment reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetInfraAssessmentReportsLimited retrieves a limited number of InfraAssessmentReports
+func (c *Client) GetInfraAssessmentReportsLimited(ctx context.Context, limit int64) (*models.InfraAssessmentReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(ClusterInfraAssessmentReportGVR).
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list clusterinfraassessmentreports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal clusterinfraassessmentreports to JSON: %w", err)
+	}
+
+	var reportList models.InfraAssessmentReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal clusterinfraassessmentreports: %w", err)
+	}
+
+	return &reportList, nil
+}

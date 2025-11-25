@@ -24,41 +24,45 @@ func NewHandler(client *k8s.Client) *Handler {
 }
 
 // GetDashboard returns aggregated dashboard data
+// Optimized to load only a limited sample of reports for statistics
 func (h *Handler) GetDashboard(c *gin.Context) {
 	ctx := context.Background()
 
-	// Get all vulnerability reports
-	vulnReports, err := h.K8sClient.GetAllVulnerabilityReports(ctx)
+	// Limit the number of reports loaded for dashboard statistics
+	// This significantly reduces memory usage
+	const dashboardLimit = int64(100)
+
+	// Get limited vulnerability reports for statistics
+	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get all config audit reports
-	configReports, err := h.K8sClient.GetAllConfigAuditReports(ctx)
+	// Get limited config audit reports
+	configReports, err := h.K8sClient.GetConfigAuditReportsLimited(ctx, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get all exposed secret reports
-	secretReports, err := h.K8sClient.GetAllExposedSecretReports(ctx)
+	// Get limited exposed secret reports
+	secretReports, err := h.K8sClient.GetExposedSecretReportsLimited(ctx, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get all RBAC assessment reports
-	rbacReports, err := h.K8sClient.GetAllRbacAssessmentReports(ctx)
+	// Get limited RBAC assessment reports
+	rbacReports, err := h.K8sClient.GetRbacAssessmentReportsLimited(ctx, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Get all infrastructure assessment reports
-	infraReports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
+	// Get limited infrastructure assessment reports
+	infraReports, err := h.K8sClient.GetInfraAssessmentReportsLimited(ctx, dashboardLimit)
 	if err != nil {
-		// Log the error for debugging
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -91,8 +95,12 @@ func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportL
 		dashboard.VulnerabilitySummary.LowCount += report.Report.Summary.LowCount
 		dashboard.VulnerabilitySummary.UnknownCount += report.Report.Summary.UnknownCount
 
-		// Count total vulnerabilities
-		totalVulns += len(report.Report.Vulnerabilities)
+		// Count total vulnerabilities from summary instead of iterating
+		totalVulns += report.Report.Summary.CriticalCount +
+			report.Report.Summary.HighCount +
+			report.Report.Summary.MediumCount +
+			report.Report.Summary.LowCount +
+			report.Report.Summary.UnknownCount
 
 		// Track pods by namespace
 		podName := extractPodName(report.Name)
@@ -102,26 +110,30 @@ func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportL
 			dashboard.PodsByNamespace[report.Namespace]++
 		}
 
-		// Count vulnerabilities by severity
-		for _, vuln := range report.Report.Vulnerabilities {
-			dashboard.VulnerabilitiesBySeverity[vuln.Severity]++
-		}
+		// Use summary counts for vulnerabilities by severity (no need to iterate)
+		dashboard.VulnerabilitiesBySeverity["CRITICAL"] += report.Report.Summary.CriticalCount
+		dashboard.VulnerabilitiesBySeverity["HIGH"] += report.Report.Summary.HighCount
+		dashboard.VulnerabilitiesBySeverity["MEDIUM"] += report.Report.Summary.MediumCount
+		dashboard.VulnerabilitiesBySeverity["LOW"] += report.Report.Summary.LowCount
+		dashboard.VulnerabilitiesBySeverity["UNKNOWN"] += report.Report.Summary.UnknownCount
 
-		// Add to recent reports
-		imageName := report.Report.Artifact.Repository
-		if report.Report.Artifact.Tag != "" {
-			imageName += ":" + report.Report.Artifact.Tag
-		}
+		// Only add to recent reports if we have less than 100 (to limit memory)
+		if len(dashboard.RecentReports) < 100 {
+			imageName := report.Report.Artifact.Repository
+			if report.Report.Artifact.Tag != "" {
+				imageName += ":" + report.Report.Artifact.Tag
+			}
 
-		dashboard.RecentReports = append(dashboard.RecentReports, models.ReportSummary{
-			Name:            report.Name,
-			Namespace:       report.Namespace,
-			Kind:            "VulnerabilityReport",
-			ContainerName:   extractContainerName(report.Name),
-			UpdateTimestamp: report.Report.UpdateTimestamp,
-			Summary:         report.Report.Summary,
-			ImageName:       imageName,
-		})
+			dashboard.RecentReports = append(dashboard.RecentReports, models.ReportSummary{
+				Name:            report.Name,
+				Namespace:       report.Namespace,
+				Kind:            "VulnerabilityReport",
+				ContainerName:   extractContainerName(report.Name),
+				UpdateTimestamp: report.Report.UpdateTimestamp,
+				Summary:         report.Report.Summary,
+				ImageName:       imageName,
+			})
+		}
 	}
 
 	// Process config audit reports

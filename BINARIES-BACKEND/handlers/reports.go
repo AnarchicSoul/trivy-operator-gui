@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -78,14 +79,31 @@ func (h *Handler) GetReportsByCategory(c *gin.Context) {
 }
 
 // GetVulnerabilityReports returns all vulnerability reports
+// Supports optional 'limit' query parameter for pagination
 func (h *Handler) GetVulnerabilityReports(c *gin.Context) {
 	namespace := c.Query("namespace")
+	limitStr := c.Query("limit")
 
 	ctx := context.Background()
 
 	var reports *models.VulnerabilityReportList
 	var err error
 
+	// If limit is specified, use limited method
+	if limitStr != "" {
+		var limit int64
+		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
+			reports, err = h.K8sClient.GetVulnerabilityReportsLimited(ctx, limit)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, reports)
+			return
+		}
+	}
+
+	// Default behavior without limit
 	if namespace != "" {
 		reports, err = h.K8sClient.GetVulnerabilityReports(ctx, namespace)
 	} else {
@@ -101,14 +119,31 @@ func (h *Handler) GetVulnerabilityReports(c *gin.Context) {
 }
 
 // GetConfigAuditReports returns all config audit reports
+// Supports optional 'limit' query parameter for pagination
 func (h *Handler) GetConfigAuditReports(c *gin.Context) {
 	namespace := c.Query("namespace")
+	limitStr := c.Query("limit")
 
 	ctx := context.Background()
 
 	var reports *models.ConfigAuditReportList
 	var err error
 
+	// If limit is specified, use limited method
+	if limitStr != "" {
+		var limit int64
+		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
+			reports, err = h.K8sClient.GetConfigAuditReportsLimited(ctx, limit)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, reports)
+			return
+		}
+	}
+
+	// Default behavior without limit
 	if namespace != "" {
 		reports, err = h.K8sClient.GetConfigAuditReports(ctx, namespace)
 	} else {
@@ -124,14 +159,31 @@ func (h *Handler) GetConfigAuditReports(c *gin.Context) {
 }
 
 // GetExposedSecretReports returns all exposed secret reports
+// Supports optional 'limit' query parameter for pagination
 func (h *Handler) GetExposedSecretReports(c *gin.Context) {
 	namespace := c.Query("namespace")
+	limitStr := c.Query("limit")
 
 	ctx := context.Background()
 
 	var reports *models.ExposedSecretReportList
 	var err error
 
+	// If limit is specified, use limited method
+	if limitStr != "" {
+		var limit int64
+		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
+			reports, err = h.K8sClient.GetExposedSecretReportsLimited(ctx, limit)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, reports)
+			return
+		}
+	}
+
+	// Default behavior without limit
 	if namespace != "" {
 		reports, err = h.K8sClient.GetExposedSecretReports(ctx, namespace)
 	} else {
@@ -147,14 +199,31 @@ func (h *Handler) GetExposedSecretReports(c *gin.Context) {
 }
 
 // GetRbacAssessmentReports returns all RBAC assessment reports
+// Supports optional 'limit' query parameter for pagination
 func (h *Handler) GetRbacAssessmentReports(c *gin.Context) {
 	namespace := c.Query("namespace")
+	limitStr := c.Query("limit")
 
 	ctx := context.Background()
 
 	var reports *models.RbacAssessmentReportList
 	var err error
 
+	// If limit is specified, use limited method
+	if limitStr != "" {
+		var limit int64
+		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
+			reports, err = h.K8sClient.GetRbacAssessmentReportsLimited(ctx, limit)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, reports)
+			return
+		}
+	}
+
+	// Default behavior without limit
 	if namespace != "" {
 		reports, err = h.K8sClient.GetRbacAssessmentReports(ctx, namespace)
 	} else {
@@ -170,12 +239,32 @@ func (h *Handler) GetRbacAssessmentReports(c *gin.Context) {
 }
 
 // GetInfraAssessmentReports returns all infrastructure assessment reports
+// Supports optional 'limit' query parameter for pagination
 func (h *Handler) GetInfraAssessmentReports(c *gin.Context) {
+	limitStr := c.Query("limit")
 	ctx := context.Background()
 
-	reports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
+	var reports *models.InfraAssessmentReportList
+	var err error
+
+	// If limit is specified, use limited method
+	if limitStr != "" {
+		var limit int64
+		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
+			reports, err = h.K8sClient.GetInfraAssessmentReportsLimited(ctx, limit)
+			if err != nil {
+				c.Error(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, reports)
+			return
+		}
+	}
+
+	// Default behavior without limit
+	reports, err = h.K8sClient.GetInfraAssessmentReports(ctx)
 	if err != nil {
-		// Log the error for debugging
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
