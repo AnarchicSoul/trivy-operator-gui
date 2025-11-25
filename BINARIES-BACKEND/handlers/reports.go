@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/trivy-operator-gui/backend/models"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetReportsByCategory returns vulnerabilities grouped by severity category
@@ -176,15 +175,6 @@ func (h *Handler) GetInfraAssessmentReports(c *gin.Context) {
 
 	reports, err := h.K8sClient.GetInfraAssessmentReports(ctx)
 	if err != nil {
-		// If CRD doesn't exist, return empty list instead of error
-		if strings.Contains(err.Error(), "could not find the requested resource") ||
-		   strings.Contains(err.Error(), "no matches for kind") {
-			c.JSON(http.StatusOK, &models.InfraAssessmentReportList{
-				TypeMeta: metav1.TypeMeta{Kind: "InfraAssessmentReportList", APIVersion: "aquasecurity.github.io/v1alpha1"},
-				Items:    []models.InfraAssessmentReport{},
-			})
-			return
-		}
 		// Log the error for debugging
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -210,15 +200,6 @@ func (h *Handler) GetSBOMReports(c *gin.Context) {
 	}
 
 	if err != nil {
-		// If CRD doesn't exist, return empty list instead of error
-		if strings.Contains(err.Error(), "could not find the requested resource") ||
-		   strings.Contains(err.Error(), "no matches for kind") {
-			c.JSON(http.StatusOK, &models.SBOMReportList{
-				TypeMeta: metav1.TypeMeta{Kind: "SBOMReportList", APIVersion: "aquasecurity.github.io/v1alpha1"},
-				Items:    []models.SBOMReport{},
-			})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -232,15 +213,6 @@ func (h *Handler) GetClusterSBOMReports(c *gin.Context) {
 
 	reports, err := h.K8sClient.GetClusterSBOMReports(ctx)
 	if err != nil {
-		// If CRD doesn't exist, return empty list instead of error
-		if strings.Contains(err.Error(), "could not find the requested resource") ||
-		   strings.Contains(err.Error(), "no matches for kind") {
-			c.JSON(http.StatusOK, &models.ClusterSBOMReportList{
-				TypeMeta: metav1.TypeMeta{Kind: "ClusterSBOMReportList", APIVersion: "aquasecurity.github.io/v1alpha1"},
-				Items:    []models.ClusterSBOMReport{},
-			})
-			return
-		}
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -255,15 +227,6 @@ func (h *Handler) GetComplianceReports(c *gin.Context) {
 
 	reports, err := h.K8sClient.GetComplianceReports(ctx)
 	if err != nil {
-		// If CRD doesn't exist, return empty list instead of error
-		if strings.Contains(err.Error(), "could not find the requested resource") ||
-		   strings.Contains(err.Error(), "no matches for kind") {
-			c.JSON(http.StatusOK, &models.ComplianceReportList{
-				TypeMeta: metav1.TypeMeta{Kind: "ComplianceReportList", APIVersion: "aquasecurity.github.io/v1alpha1"},
-				Items:    []models.ComplianceReport{},
-			})
-			return
-		}
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
