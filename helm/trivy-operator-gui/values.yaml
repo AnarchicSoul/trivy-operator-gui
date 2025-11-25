@@ -160,6 +160,9 @@ rbac:
         - exposedsecretreports
         - rbacassessmentreports
         - clusterinfraassessmentreports
+        - sbomreports
+        - clustersbomreports
+        - clustercompliancereports
       verbs:
         - get
         - list
