@@ -51,6 +51,20 @@ var (
 		Version:  "v1alpha1",
 		Resource: "clusterinfraassessmentreports",
 	}
+
+	// SBOMReportGVR is the GroupVersionResource for SBOM Reports
+	SBOMReportGVR = schema.GroupVersionResource{
+		Group:    "aquasecurity.github.io",
+		Version:  "v1alpha1",
+		Resource: "sbomreports",
+	}
+
+	// ClusterComplianceReportGVR is the GroupVersionResource for ClusterComplianceReports
+	ClusterComplianceReportGVR = schema.GroupVersionResource{
+		Group:    "aquasecurity.github.io",
+		Version:  "v1alpha1",
+		Resource: "clustercompliancereports",
+	}
 )
 
 // Client wraps Kubernetes clients for accessing Trivy reports
@@ -284,6 +298,57 @@ func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAs
 			sample = sample[:500] + "..."
 		}
 		return nil, fmt.Errorf("failed to unmarshal clusterinfraassessmentreports (data length: %d bytes, sample: %s): %w", len(data), sample, err)
+	}
+
+	return &reportList, nil
+}
+
+// GetSBOMReports retrieves all SBOM Reports from a namespace
+func (c *Client) GetSBOMReports(ctx context.Context, namespace string) (*models.SBOMReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(SBOMReportGVR).
+		Namespace(namespace).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list SBOM reports: %w", err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal SBOM reports: %w", err)
+	}
+
+	var reportList models.SBOMReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal SBOM reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetAllSBOMReports retrieves SBOM Reports from all namespaces
+func (c *Client) GetAllSBOMReports(ctx context.Context) (*models.SBOMReportList, error) {
+	return c.GetSBOMReports(ctx, "")
+}
+
+// GetComplianceReports retrieves all ClusterComplianceReports (cluster-scoped)
+func (c *Client) GetComplianceReports(ctx context.Context) (*models.ComplianceReportList, error) {
+	// ClusterComplianceReports are cluster-scoped, so we don't specify a namespace
+	unstructuredList, err := c.DynamicClient.Resource(ClusterComplianceReportGVR).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list clustercompliancereports (GVR: %v): %w", ClusterComplianceReportGVR, err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal clustercompliancereports to JSON: %w", err)
+	}
+
+	var reportList models.ComplianceReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal clustercompliancereports: %w", err)
 	}
 
 	return &reportList, nil

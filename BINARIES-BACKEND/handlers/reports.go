@@ -183,3 +183,40 @@ func (h *Handler) GetInfraAssessmentReports(c *gin.Context) {
 
 	c.JSON(http.StatusOK, reports)
 }
+
+// GetSBOMReports returns all SBOM reports
+func (h *Handler) GetSBOMReports(c *gin.Context) {
+	namespace := c.Query("namespace")
+
+	ctx := context.Background()
+
+	var reports *models.SBOMReportList
+	var err error
+
+	if namespace != "" {
+		reports, err = h.K8sClient.GetSBOMReports(ctx, namespace)
+	} else {
+		reports, err = h.K8sClient.GetAllSBOMReports(ctx)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}
+
+// GetComplianceReports returns all compliance reports
+func (h *Handler) GetComplianceReports(c *gin.Context) {
+	ctx := context.Background()
+
+	reports, err := h.K8sClient.GetComplianceReports(ctx)
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}

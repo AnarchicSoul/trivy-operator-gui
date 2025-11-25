@@ -42,6 +42,8 @@ import {
   getExposedSecretReports,
   getRbacAssessmentReports,
   getInfraAssessmentReports,
+  getSBOMReports,
+  getComplianceReports,
   getNamespaces,
 } from '../services/api';
 
@@ -63,6 +65,8 @@ const ReportsView = () => {
   const [secretReports, setSecretReports] = useState([]);
   const [rbacReports, setRbacReports] = useState([]);
   const [infraReports, setInfraReports] = useState([]);
+  const [sbomReports, setSbomReports] = useState([]);
+  const [complianceReports, setComplianceReports] = useState([]);
   const [namespaces, setNamespaces] = useState([]);
   const [selectedNamespace, setSelectedNamespace] = useState('');
   const [loading, setLoading] = useState(true);
@@ -81,6 +85,10 @@ const ReportsView = () => {
   const [rbacRowsPerPage, setRbacRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
   const [infraPage, setInfraPage] = useState(0);
   const [infraRowsPerPage, setInfraRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
+  const [sbomPage, setSbomPage] = useState(0);
+  const [sbomRowsPerPage, setSbomRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
+  const [compliancePage, setCompliancePage] = useState(0);
+  const [complianceRowsPerPage, setComplianceRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
 
   const fetchNamespaces = async () => {
     try {
@@ -111,12 +119,20 @@ const ReportsView = () => {
       const infraResponse = await getInfraAssessmentReports();
       setInfraReports(infraResponse.data.items || []);
 
+      const sbomResponse = await getSBOMReports(selectedNamespace);
+      setSbomReports(sbomResponse.data.items || []);
+
+      const complianceResponse = await getComplianceReports();
+      setComplianceReports(complianceResponse.data.items || []);
+
       // Reset pagination when data changes
       setVulnPage(0);
       setConfigPage(0);
       setSecretPage(0);
       setRbacPage(0);
       setInfraPage(0);
+      setSbomPage(0);
+      setCompliancePage(0);
     } catch (err) {
       setError(err.message || 'Failed to fetch reports');
     } finally {
@@ -435,6 +451,8 @@ const ReportsView = () => {
           <Tab label={`Exposed Secrets (${secretReports.length})`} />
           <Tab label={`RBAC Assessment (${rbacReports.length})`} />
           <Tab label={`Infra Assessment (${infraReports.length})`} />
+          <Tab label={`SBOM Reports (${sbomReports.length})`} />
+          <Tab label={`Compliance Reports (${complianceReports.length})`} />
         </Tabs>
       </Paper>
 
@@ -1083,6 +1101,175 @@ const ReportsView = () => {
         </Paper>
       )}
 
+      {/* SBOM Reports Table */}
+      {tabValue === 5 && (
+        <Paper>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Name</strong></TableCell>
+                  <TableCell><strong>Namespace</strong></TableCell>
+                  <TableCell><strong>Image</strong></TableCell>
+                  <TableCell><strong>Scanner</strong></TableCell>
+                  <TableCell align="center"><strong>Components</strong></TableCell>
+                  <TableCell align="center"><strong>Dependencies</strong></TableCell>
+                  <TableCell><strong>Updated</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sbomReports.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                        No SBOM reports found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sbomReports
+                    .slice(sbomPage * sbomRowsPerPage, sbomPage * sbomRowsPerPage + sbomRowsPerPage)
+                    .map((report, index) => (
+                      <TableRow
+                        key={index}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => handleOpenDetail(report)}
+                      >
+                        <TableCell>{report.metadata.name}</TableCell>
+                        <TableCell>{report.metadata.namespace}</TableCell>
+                        <TableCell>
+                          {report.report.artifact?.repository || 'N/A'}
+                          {report.report.artifact?.tag && `:${report.report.artifact.tag}`}
+                        </TableCell>
+                        <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.componentsCount || 0}
+                            size="small"
+                            color="primary"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.dependenciesCount || 0}
+                            size="small"
+                            color="secondary"
+                          />
+                        </TableCell>
+                        <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={sbomReports.length}
+            page={sbomPage}
+            onPageChange={(e, newPage) => setSbomPage(newPage)}
+            rowsPerPage={sbomRowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setSbomRowsPerPage(parseInt(e.target.value, 10));
+              setSbomPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Reports per page:"
+          />
+        </Paper>
+      )}
+
+      {/* Compliance Reports Table */}
+      {tabValue === 6 && (
+        <Paper>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Name</strong></TableCell>
+                  <TableCell><strong>Type</strong></TableCell>
+                  <TableCell><strong>Scanner</strong></TableCell>
+                  <TableCell align="center"><strong>Pass</strong></TableCell>
+                  <TableCell align="center"><strong>Fail</strong></TableCell>
+                  <TableCell align="center"><strong>Warn</strong></TableCell>
+                  <TableCell align="center"><strong>Skip</strong></TableCell>
+                  <TableCell><strong>Updated</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {complianceReports.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                        No compliance reports found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  complianceReports
+                    .slice(compliancePage * complianceRowsPerPage, compliancePage * complianceRowsPerPage + complianceRowsPerPage)
+                    .map((report, index) => (
+                      <TableRow
+                        key={index}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => handleOpenDetail(report)}
+                      >
+                        <TableCell>{report.metadata.name}</TableCell>
+                        <TableCell>{report.report.type || 'N/A'}</TableCell>
+                        <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.passCount || 0}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.failCount || 0}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.warnCount || 0}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.skipCount || 0}
+                            size="small"
+                            sx={{ bgcolor: SEVERITY_COLORS.UNKNOWN, color: 'white' }}
+                          />
+                        </TableCell>
+                        <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={complianceReports.length}
+            page={compliancePage}
+            onPageChange={(e, newPage) => setCompliancePage(newPage)}
+            rowsPerPage={complianceRowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setComplianceRowsPerPage(parseInt(e.target.value, 10));
+              setCompliancePage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Reports per page:"
+          />
+        </Paper>
+      )}
+
       {/* Detail Dialog */}
       <Dialog
         open={detailDialogOpen}
@@ -1299,6 +1486,109 @@ const ReportsView = () => {
                           {check.messages && check.messages.length > 0
                             ? check.messages.join('\n')
                             : 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+          {selectedReport && selectedReport.report.components && (
+            /* SBOM Report Details */
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Name</strong></TableCell>
+                    <TableCell><strong>Version</strong></TableCell>
+                    <TableCell><strong>Type</strong></TableCell>
+                    <TableCell><strong>Licenses</strong></TableCell>
+                    <TableCell><strong>PURL</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedReport.report.components.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                          No components found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReport.report.components.map((component, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{component.name || 'N/A'}</TableCell>
+                        <TableCell>{component.version || 'N/A'}</TableCell>
+                        <TableCell>{component.type || 'N/A'}</TableCell>
+                        <TableCell>
+                          {component.licenses && component.licenses.length > 0
+                            ? component.licenses.join(', ')
+                            : 'N/A'}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {component.purl || 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+          {selectedReport && selectedReport.report.results && (
+            /* Compliance Report Details */
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>ID</strong></TableCell>
+                    <TableCell><strong>Title</strong></TableCell>
+                    <TableCell><strong>Severity</strong></TableCell>
+                    <TableCell><strong>Status</strong></TableCell>
+                    <TableCell><strong>Control ID</strong></TableCell>
+                    <TableCell><strong>Description</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedReport.report.results.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                          No compliance results found
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    selectedReport.report.results.map((result, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{result.id || 'N/A'}</TableCell>
+                        <TableCell>{result.title || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={result.severity || 'N/A'}
+                            size="small"
+                            sx={{
+                              bgcolor: SEVERITY_COLORS[result.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                              color: 'white',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={result.status || 'N/A'}
+                            size="small"
+                            color={
+                              result.status === 'PASS' ? 'success' :
+                              result.status === 'FAIL' ? 'error' :
+                              result.status === 'WARN' ? 'warning' : 'default'
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>{result.controlID || 'N/A'}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          {result.description || 'N/A'}
                         </TableCell>
                       </TableRow>
                     ))

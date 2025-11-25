@@ -43,6 +43,15 @@ export const getInfraAssessmentReports = () => {
   return api.get('/reports/infra-assessment');
 };
 
+export const getSBOMReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/sbom', { params });
+};
+
+export const getComplianceReports = () => {
+  return api.get('/reports/compliance');
+};
+
 // Categories
 export const getReportsByCategory = (severity) =>
   api.get(`/category/${severity}`);
