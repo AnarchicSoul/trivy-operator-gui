@@ -47,6 +47,7 @@ func main() {
 		api.GET("/reports/rbac-assessment", handler.GetRbacAssessmentReports)
 		api.GET("/reports/infra-assessment", handler.GetInfraAssessmentReports)
 		api.GET("/reports/sbom", handler.GetSBOMReports)
+		api.GET("/reports/kbom", handler.GetClusterSBOMReports)
 		api.GET("/reports/compliance", handler.GetComplianceReports)
 
 		// Categories (by severity)

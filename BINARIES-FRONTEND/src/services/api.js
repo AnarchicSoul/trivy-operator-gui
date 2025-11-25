@@ -48,6 +48,10 @@ export const getSBOMReports = (namespace = '') => {
   return api.get('/reports/sbom', { params });
 };
 
+export const getKBOMReports = () => {
+  return api.get('/reports/kbom');
+};
+
 export const getComplianceReports = () => {
   return api.get('/reports/compliance');
 };

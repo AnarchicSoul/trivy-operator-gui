@@ -207,6 +207,20 @@ func (h *Handler) GetSBOMReports(c *gin.Context) {
 	c.JSON(http.StatusOK, reports)
 }
 
+// GetClusterSBOMReports returns all ClusterSBOM reports (KBOM)
+func (h *Handler) GetClusterSBOMReports(c *gin.Context) {
+	ctx := context.Background()
+
+	reports, err := h.K8sClient.GetClusterSBOMReports(ctx)
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reports)
+}
+
 // GetComplianceReports returns all compliance reports
 func (h *Handler) GetComplianceReports(c *gin.Context) {
 	ctx := context.Background()

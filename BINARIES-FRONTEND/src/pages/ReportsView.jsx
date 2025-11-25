@@ -43,6 +43,7 @@ import {
   getRbacAssessmentReports,
   getInfraAssessmentReports,
   getSBOMReports,
+  getKBOMReports,
   getComplianceReports,
   getNamespaces,
 } from '../services/api';
@@ -66,6 +67,7 @@ const ReportsView = () => {
   const [rbacReports, setRbacReports] = useState([]);
   const [infraReports, setInfraReports] = useState([]);
   const [sbomReports, setSbomReports] = useState([]);
+  const [kbomReports, setKbomReports] = useState([]);
   const [complianceReports, setComplianceReports] = useState([]);
   const [namespaces, setNamespaces] = useState([]);
   const [selectedNamespace, setSelectedNamespace] = useState('');
@@ -87,6 +89,8 @@ const ReportsView = () => {
   const [infraRowsPerPage, setInfraRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
   const [sbomPage, setSbomPage] = useState(0);
   const [sbomRowsPerPage, setSbomRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
+  const [kbomPage, setKbomPage] = useState(0);
+  const [kbomRowsPerPage, setKbomRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
   const [compliancePage, setCompliancePage] = useState(0);
   const [complianceRowsPerPage, setComplianceRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
 
@@ -122,6 +126,9 @@ const ReportsView = () => {
       const sbomResponse = await getSBOMReports(selectedNamespace);
       setSbomReports(sbomResponse.data.items || []);
 
+      const kbomResponse = await getKBOMReports();
+      setKbomReports(kbomResponse.data.items || []);
+
       const complianceResponse = await getComplianceReports();
       setComplianceReports(complianceResponse.data.items || []);
 
@@ -132,6 +139,7 @@ const ReportsView = () => {
       setRbacPage(0);
       setInfraPage(0);
       setSbomPage(0);
+      setKbomPage(0);
       setCompliancePage(0);
     } catch (err) {
       setError(err.message || 'Failed to fetch reports');
@@ -452,6 +460,7 @@ const ReportsView = () => {
           <Tab label={`RBAC Assessment (${rbacReports.length})`} />
           <Tab label={`Infra Assessment (${infraReports.length})`} />
           <Tab label={`SBOM Reports (${sbomReports.length})`} />
+          <Tab label={`KBOM Reports (${kbomReports.length})`} />
           <Tab label={`Compliance Reports (${complianceReports.length})`} />
         </Tabs>
       </Paper>
@@ -1180,8 +1189,80 @@ const ReportsView = () => {
         </Paper>
       )}
 
-      {/* Compliance Reports Table */}
+      {/* KBOM Reports Table */}
       {tabValue === 6 && (
+        <Paper>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Name</strong></TableCell>
+                  <TableCell><strong>Scanner</strong></TableCell>
+                  <TableCell align="center"><strong>Components</strong></TableCell>
+                  <TableCell align="center"><strong>Dependencies</strong></TableCell>
+                  <TableCell><strong>Updated</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {kbomReports.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="body2" color="textSecondary" sx={{ py: 4 }}>
+                        No KBOM reports found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  kbomReports
+                    .slice(kbomPage * kbomRowsPerPage, kbomPage * kbomRowsPerPage + kbomRowsPerPage)
+                    .map((report, index) => (
+                      <TableRow
+                        key={index}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => handleOpenDetail(report)}
+                      >
+                        <TableCell>{report.metadata.name}</TableCell>
+                        <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.componentsCount || 0}
+                            size="small"
+                            color="primary"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={report.report.summary.dependenciesCount || 0}
+                            size="small"
+                            color="secondary"
+                          />
+                        </TableCell>
+                        <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={kbomReports.length}
+            page={kbomPage}
+            onPageChange={(e, newPage) => setKbomPage(newPage)}
+            rowsPerPage={kbomRowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setKbomRowsPerPage(parseInt(e.target.value, 10));
+              setKbomPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Reports per page:"
+          />
+        </Paper>
+      )}
+
+      {/* Compliance Reports Table */}
+      {tabValue === 7 && (
         <Paper>
           <TableContainer>
             <Table>

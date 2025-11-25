@@ -59,6 +59,13 @@ var (
 		Resource: "sbomreports",
 	}
 
+	// ClusterSBOMReportGVR is the GroupVersionResource for ClusterSBOM Reports (KBOM)
+	ClusterSBOMReportGVR = schema.GroupVersionResource{
+		Group:    "aquasecurity.github.io",
+		Version:  "v1alpha1",
+		Resource: "clustersbomreports",
+	}
+
 	// ClusterComplianceReportGVR is the GroupVersionResource for ClusterComplianceReports
 	ClusterComplianceReportGVR = schema.GroupVersionResource{
 		Group:    "aquasecurity.github.io",
@@ -329,6 +336,29 @@ func (c *Client) GetSBOMReports(ctx context.Context, namespace string) (*models.
 // GetAllSBOMReports retrieves SBOM Reports from all namespaces
 func (c *Client) GetAllSBOMReports(ctx context.Context) (*models.SBOMReportList, error) {
 	return c.GetSBOMReports(ctx, "")
+}
+
+// GetClusterSBOMReports retrieves all ClusterSBOM Reports (KBOM - cluster-scoped)
+func (c *Client) GetClusterSBOMReports(ctx context.Context) (*models.ClusterSBOMReportList, error) {
+	// ClusterSBOMReports are cluster-scoped, so we don't specify a namespace
+	unstructuredList, err := c.DynamicClient.Resource(ClusterSBOMReportGVR).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list clustersbomreports (GVR: %v): %w", ClusterSBOMReportGVR, err)
+	}
+
+	// Convert unstructured to typed object
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal clustersbomreports to JSON: %w", err)
+	}
+
+	var reportList models.ClusterSBOMReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal clustersbomreports: %w", err)
+	}
+
+	return &reportList, nil
 }
 
 // GetComplianceReports retrieves all ClusterComplianceReports (cluster-scoped)
