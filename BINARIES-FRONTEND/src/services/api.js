@@ -42,8 +42,9 @@ export const getRbacAssessmentReports = (namespace = '') => {
   return api.get('/reports/rbac-assessment', { params });
 };
 
-export const getInfraAssessmentReports = () => {
-  return api.get('/reports/infra-assessment');
+export const getInfraAssessmentReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/infra-assessment', { params });
 };
 
 export const getSBOMReports = (namespace = '') => {
@@ -51,12 +52,14 @@ export const getSBOMReports = (namespace = '') => {
   return api.get('/reports/sbom', { params });
 };
 
-export const getKBOMReports = () => {
-  return api.get('/reports/kbom');
+export const getKBOMReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/kbom', { params });
 };
 
-export const getComplianceReports = () => {
-  return api.get('/reports/compliance');
+export const getComplianceReports = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/reports/compliance', { params });
 };
 
 // Categories

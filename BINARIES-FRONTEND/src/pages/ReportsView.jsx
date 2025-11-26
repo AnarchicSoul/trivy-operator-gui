@@ -111,64 +111,65 @@ const ReportsView = () => {
   };
 
   // Lazy loading: Only fetch data for the active tab
-  const fetchTabData = async (tabIndex) => {
+  // forceReload: if true, reload data even if already loaded (used when namespace changes)
+  const fetchTabData = async (tabIndex, forceReload = false) => {
     try {
       setLoading(true);
       setError(null);
 
       switch (tabIndex) {
         case 0: // Vulnerability Reports
-          if (vulnReports.length === 0) {
+          if (forceReload || vulnReports.length === 0) {
             const vulnResponse = await getVulnerabilityReports(selectedNamespace);
             setVulnReports(vulnResponse.data.items || []);
             setVulnPage(0);
           }
           break;
         case 1: // Config Audit Reports
-          if (configReports.length === 0) {
+          if (forceReload || configReports.length === 0) {
             const configResponse = await getConfigAuditReports(selectedNamespace);
             setConfigReports(configResponse.data.items || []);
             setConfigPage(0);
           }
           break;
         case 2: // Exposed Secret Reports
-          if (secretReports.length === 0) {
+          if (forceReload || secretReports.length === 0) {
             const secretResponse = await getExposedSecretReports(selectedNamespace);
             setSecretReports(secretResponse.data.items || []);
             setSecretPage(0);
           }
           break;
         case 3: // RBAC Assessment Reports
-          if (rbacReports.length === 0) {
+          if (forceReload || rbacReports.length === 0) {
             const rbacResponse = await getRbacAssessmentReports(selectedNamespace);
             setRbacReports(rbacResponse.data.items || []);
             setRbacPage(0);
           }
           break;
         case 4: // Infra Assessment Reports
-          if (infraReports.length === 0) {
-            const infraResponse = await getInfraAssessmentReports();
+          if (forceReload || infraReports.length === 0) {
+            const infraResponse = await getInfraAssessmentReports(selectedNamespace);
             setInfraReports(infraResponse.data.items || []);
             setInfraPage(0);
           }
           break;
         case 5: // SBOM Reports
-          if (sbomReports.length === 0) {
+          if (forceReload || sbomReports.length === 0) {
             const sbomResponse = await getSBOMReports(selectedNamespace);
             setSbomReports(sbomResponse.data.items || []);
             setSbomPage(0);
           }
           break;
         case 6: // KBOM Reports
-          if (kbomReports.length === 0) {
-            const kbomResponse = await getKBOMReports();
+          if (forceReload || kbomReports.length === 0) {
+            const kbomResponse = await getKBOMReports(selectedNamespace);
             setKbomReports(kbomResponse.data.items || []);
             setKbomPage(0);
           }
           break;
         case 7: // Compliance Reports
-          if (complianceReports.length === 0) {
-            const complianceResponse = await getComplianceReports();
+          if (forceReload || complianceReports.length === 0) {
+            const complianceResponse = await getComplianceReports(selectedNamespace);
             setComplianceReports(complianceResponse.data.items || []);
             setCompliancePage(0);
           }
@@ -225,22 +226,13 @@ const ReportsView = () => {
   }, []);
 
   useEffect(() => {
-    // When namespace changes, clear all data and reload current tab
+    // When namespace changes, force reload current tab
     // This triggers when:
     // 1. Initial namespace is set (first namespace from the list)
     // 2. User manually changes namespace
     if (selectedNamespace !== null && selectedNamespace !== undefined) {
-      setVulnReports([]);
-      setConfigReports([]);
-      setSecretReports([]);
-      setRbacReports([]);
-      setInfraReports([]);
-      setSbomReports([]);
-      setKbomReports([]);
-      setComplianceReports([]);
-
-      // Load data for current tab with the selected namespace
-      fetchTabData(tabValue);
+      // Force reload current tab data with new namespace
+      fetchTabData(tabValue, true);
     }
   }, [selectedNamespace]);
 
@@ -1454,7 +1446,7 @@ const ReportsView = () => {
               {selectedReport?.metadata.name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {selectedReport && (
+              {selectedReport && selectedReport.report && (
                 <>
                   <Tooltip title="Download PDF">
                     <IconButton
@@ -1495,7 +1487,7 @@ const ReportsView = () => {
           </Box>
         </DialogTitle>
         <DialogContent dividers>
-          {selectedReport && selectedReport.report.vulnerabilities && (
+          {selectedReport && selectedReport.report && selectedReport.report.vulnerabilities && (
             /* Vulnerability Report Details */
             <TableContainer>
               <Table size="small">
@@ -1553,7 +1545,7 @@ const ReportsView = () => {
               </Table>
             </TableContainer>
           )}
-          {selectedReport && selectedReport.report.secrets && (
+          {selectedReport && selectedReport.report && selectedReport.report.secrets && (
             /* Exposed Secret Report Details */
             <TableContainer>
               <Table size="small">
@@ -1603,7 +1595,7 @@ const ReportsView = () => {
               </Table>
             </TableContainer>
           )}
-          {selectedReport && selectedReport.report.checks && (
+          {selectedReport && selectedReport.report && selectedReport.report.checks && (
             /* Config Audit / RBAC / Infra Report Details */
             <TableContainer>
               <Table size="small">
@@ -1665,7 +1657,7 @@ const ReportsView = () => {
               </Table>
             </TableContainer>
           )}
-          {selectedReport && selectedReport.report.components && selectedReport.report.components.components && (
+          {selectedReport && selectedReport.report && selectedReport.report.components && selectedReport.report.components.components && (
             /* SBOM Report Details */
             <>
               <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
