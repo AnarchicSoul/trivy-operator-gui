@@ -487,232 +487,237 @@ const ReportsView = () => {
 
   // Export all reports with FULL DETAILS to PDF
   const exportAllToPDF = () => {
-    const doc = new jsPDF('landscape', 'mm', 'a4');
-    const namespace = selectedNamespace || 'All Namespaces';
-    let yPosition = 20;
+    try {
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const namespace = selectedNamespace || 'All Namespaces';
+      let yPosition = 20;
 
-    // Title Page
-    doc.setFontSize(20);
-    doc.setTextColor(33, 37, 41);
-    doc.text('Trivy Operator - Complete Reports Export', 14, yPosition);
+      // Title Page
+      doc.setFontSize(20);
+      doc.setTextColor(33, 37, 41);
+      doc.text('Trivy Operator - Complete Reports Export', 14, yPosition);
 
-    yPosition += 10;
-    doc.setFontSize(12);
-    doc.text(`Namespace: ${namespace}`, 14, yPosition);
-
-    yPosition += 7;
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, yPosition);
-
-    yPosition += 7;
-    doc.text(`Total Reports: Vuln=${vulnReports.length}, Config=${configReports.length}, Secrets=${secretReports.length}, RBAC=${rbacReports.length}, Infra=${infraReports.length}, SBOM=${sbomReports.length}, KBOM=${kbomReports.length}, Compliance=${complianceReports.length}`, 14, yPosition);
-
-    // Vulnerability Reports
-    if (vulnReports.length > 0) {
-      doc.addPage();
-      yPosition = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(211, 47, 47);
-      doc.text('VULNERABILITY REPORTS', 14, yPosition);
       yPosition += 10;
+      doc.setFontSize(12);
+      doc.text(`Namespace: ${namespace}`, 14, yPosition);
 
-      vulnReports.forEach((report, idx) => {
-        const vulns = report.report.vulnerabilities || [];
-        const tableData = vulns.length === 0
-          ? [['No vulnerabilities found', '', '', '', '']]
-          : vulns.map(v => [
-              (v.vulnerabilityID || '').substring(0, 20),
-              (v.resource || v.pkgName || '').substring(0, 30),
-              (v.installedVersion || '').substring(0, 15),
-              (v.fixedVersion || '').substring(0, 15),
-              v.severity || ''
-            ]);
+      yPosition += 7;
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, yPosition);
+
+      yPosition += 7;
+      doc.text(`Total Reports: Vuln=${vulnReports.length}, Config=${configReports.length}, Secrets=${secretReports.length}, RBAC=${rbacReports.length}, Infra=${infraReports.length}, SBOM=${sbomReports.length}, KBOM=${kbomReports.length}, Compliance=${complianceReports.length}`, 14, yPosition);
+
+      // Vulnerability Reports
+      if (vulnReports.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(211, 47, 47);
+        doc.text('VULNERABILITY REPORTS', 14, yPosition);
+        yPosition += 10;
+
+        vulnReports.forEach((report, idx) => {
+          const vulns = report.report?.vulnerabilities || [];
+          const tableData = vulns.length === 0
+            ? [['No vulnerabilities found', '', '', '', '']]
+            : vulns.map(v => [
+                (v.vulnerabilityID || '').substring(0, 20),
+                (v.resource || v.pkgName || '').substring(0, 30),
+                (v.installedVersion || '').substring(0, 15),
+                (v.fixedVersion || '').substring(0, 15),
+                v.severity || ''
+              ]);
+
+          doc.autoTable({
+            startY: yPosition,
+            head: [[`Report: ${report.metadata?.name || 'Unknown'} (${report.metadata?.namespace || 'N/A'})`]],
+            headStyles: { fillColor: [211, 47, 47], fontSize: 10 },
+            margin: { left: 14 },
+            styles: { fontSize: 8 }
+          });
+
+          doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 2,
+            head: [['CVE ID', 'Package', 'Installed', 'Fixed', 'Severity']],
+            body: tableData,
+            headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+            styles: { fontSize: 7 },
+            margin: { left: 14 }
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 10;
+          if (yPosition > 180 && idx < vulnReports.length - 1) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+
+      // Config Audit Reports
+      if (configReports.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(245, 124, 0);
+        doc.text('CONFIGURATION AUDIT REPORTS', 14, yPosition);
+        yPosition += 10;
+
+        configReports.forEach((report, idx) => {
+          const checks = report.report?.checks || [];
+          const tableData = checks.length === 0
+            ? [['No issues found', '', '', '']]
+            : checks.filter(c => !c.success).map(c => [
+                (c.checkID || '').substring(0, 15),
+                (c.title || '').substring(0, 50),
+                c.severity || '',
+                c.success ? 'PASS' : 'FAIL'
+              ]);
+
+          doc.autoTable({
+            startY: yPosition,
+            head: [[`Report: ${report.metadata?.name || 'Unknown'} (${report.metadata?.namespace || 'N/A'})`]],
+            headStyles: { fillColor: [245, 124, 0], fontSize: 10 },
+            margin: { left: 14 }
+          });
+
+          doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 2,
+            head: [['Check ID', 'Title', 'Severity', 'Status']],
+            body: tableData,
+            headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+            styles: { fontSize: 7 },
+            margin: { left: 14 }
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 10;
+          if (yPosition > 180 && idx < configReports.length - 1) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+
+      // Exposed Secrets
+      if (secretReports.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(156, 39, 176);
+        doc.text('EXPOSED SECRETS REPORTS', 14, yPosition);
+        yPosition += 10;
+
+        secretReports.forEach((report, idx) => {
+          const secrets = report.report?.secrets || [];
+          const tableData = secrets.length === 0
+            ? [['No secrets found', '', '', '']]
+            : secrets.map(s => [
+                (s.ruleID || '').substring(0, 20),
+                (s.title || '').substring(0, 40),
+                s.severity || '',
+                (s.target || '').substring(0, 30)
+              ]);
+
+          doc.autoTable({
+            startY: yPosition,
+            head: [[`Report: ${report.metadata?.name || 'Unknown'} (${report.metadata?.namespace || 'N/A'})`]],
+            headStyles: { fillColor: [156, 39, 176], fontSize: 10 },
+            margin: { left: 14 }
+          });
+
+          doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 2,
+            head: [['Rule ID', 'Title', 'Severity', 'Target']],
+            body: tableData,
+            headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+            styles: { fontSize: 7 },
+            margin: { left: 14 }
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 10;
+          if (yPosition > 180 && idx < secretReports.length - 1) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+
+      // SBOM Reports Summary
+      if (sbomReports.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(94, 53, 177);
+        doc.text('SBOM REPORTS - Component Summary', 14, yPosition);
+        yPosition += 10;
+
+        const sbomSummaryData = sbomReports.map(report => [
+          report.metadata?.name || 'Unknown',
+          report.metadata?.namespace || 'N/A',
+          report.report?.components?.components?.length || 0,
+          report.report?.scanner?.name || 'N/A'
+        ]);
 
         doc.autoTable({
           startY: yPosition,
-          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
-          headStyles: { fillColor: [211, 47, 47], fontSize: 10 },
-          margin: { left: 14 },
-          styles: { fontSize: 8 }
-        });
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 2,
-          head: [['CVE ID', 'Package', 'Installed', 'Fixed', 'Severity']],
-          body: tableData,
-          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
-          styles: { fontSize: 7 },
+          head: [['Report Name', 'Namespace', 'Components', 'Scanner']],
+          body: sbomSummaryData,
+          headStyles: { fillColor: [94, 53, 177], fontSize: 10 },
+          styles: { fontSize: 8 },
           margin: { left: 14 }
         });
+      }
 
-        yPosition = doc.lastAutoTable.finalY + 10;
-        if (yPosition > 180 && idx < vulnReports.length - 1) {
-          doc.addPage();
-          yPosition = 20;
-        }
-      });
+      // Compliance Reports
+      if (complianceReports.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(67, 160, 71);
+        doc.text('COMPLIANCE REPORTS', 14, yPosition);
+        yPosition += 10;
+
+        complianceReports.forEach((report, idx) => {
+          const controls = report.spec?.compliance?.controls || [];
+          const failedControls = controls.filter(c => (c.totalFail || 0) > 0);
+          const tableData = failedControls.length === 0
+            ? [['All controls passed', '', '', '']]
+            : failedControls.map(c => [
+                (c.id || '').substring(0, 15),
+                (c.name || '').substring(0, 50),
+                c.severity || '',
+                c.totalFail || 0
+              ]);
+
+          doc.autoTable({
+            startY: yPosition,
+            head: [[`Report: ${report.metadata?.name || 'Unknown'} - ${report.spec?.compliance?.title || 'Compliance'}`]],
+            headStyles: { fillColor: [67, 160, 71], fontSize: 10 },
+            margin: { left: 14 }
+          });
+
+          doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 2,
+            head: [['Control ID', 'Name', 'Severity', 'Failures']],
+            body: tableData,
+            headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+            styles: { fontSize: 7 },
+            margin: { left: 14 }
+          });
+
+          yPosition = doc.lastAutoTable.finalY + 10;
+          if (yPosition > 180 && idx < complianceReports.length - 1) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+
+      // Save PDF
+      doc.save(`trivy-complete-export-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Erreur lors de la génération du PDF: ' + error.message);
     }
-
-    // Config Audit Reports
-    if (configReports.length > 0) {
-      doc.addPage();
-      yPosition = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(245, 124, 0);
-      doc.text('CONFIGURATION AUDIT REPORTS', 14, yPosition);
-      yPosition += 10;
-
-      configReports.forEach((report, idx) => {
-        const checks = report.report.checks || [];
-        const tableData = checks.length === 0
-          ? [['No issues found', '', '', '']]
-          : checks.filter(c => !c.success).map(c => [
-              (c.checkID || '').substring(0, 15),
-              (c.title || '').substring(0, 50),
-              c.severity || '',
-              c.success ? 'PASS' : 'FAIL'
-            ]);
-
-        doc.autoTable({
-          startY: yPosition,
-          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
-          headStyles: { fillColor: [245, 124, 0], fontSize: 10 },
-          margin: { left: 14 }
-        });
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 2,
-          head: [['Check ID', 'Title', 'Severity', 'Status']],
-          body: tableData,
-          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
-          styles: { fontSize: 7 },
-          margin: { left: 14 }
-        });
-
-        yPosition = doc.lastAutoTable.finalY + 10;
-        if (yPosition > 180 && idx < configReports.length - 1) {
-          doc.addPage();
-          yPosition = 20;
-        }
-      });
-    }
-
-    // Exposed Secrets
-    if (secretReports.length > 0) {
-      doc.addPage();
-      yPosition = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(156, 39, 176);
-      doc.text('EXPOSED SECRETS REPORTS', 14, yPosition);
-      yPosition += 10;
-
-      secretReports.forEach((report, idx) => {
-        const secrets = report.report.secrets || [];
-        const tableData = secrets.length === 0
-          ? [['No secrets found', '', '', '']]
-          : secrets.map(s => [
-              (s.ruleID || '').substring(0, 20),
-              (s.title || '').substring(0, 40),
-              s.severity || '',
-              (s.target || '').substring(0, 30)
-            ]);
-
-        doc.autoTable({
-          startY: yPosition,
-          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
-          headStyles: { fillColor: [156, 39, 176], fontSize: 10 },
-          margin: { left: 14 }
-        });
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 2,
-          head: [['Rule ID', 'Title', 'Severity', 'Target']],
-          body: tableData,
-          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
-          styles: { fontSize: 7 },
-          margin: { left: 14 }
-        });
-
-        yPosition = doc.lastAutoTable.finalY + 10;
-        if (yPosition > 180 && idx < secretReports.length - 1) {
-          doc.addPage();
-          yPosition = 20;
-        }
-      });
-    }
-
-    // SBOM Reports Summary
-    if (sbomReports.length > 0) {
-      doc.addPage();
-      yPosition = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(94, 53, 177);
-      doc.text('SBOM REPORTS - Component Summary', 14, yPosition);
-      yPosition += 10;
-
-      const sbomSummaryData = sbomReports.map(report => [
-        report.metadata.name,
-        report.metadata.namespace,
-        report.report.components?.components?.length || 0,
-        report.report.scanner?.name || 'N/A'
-      ]);
-
-      doc.autoTable({
-        startY: yPosition,
-        head: [['Report Name', 'Namespace', 'Components', 'Scanner']],
-        body: sbomSummaryData,
-        headStyles: { fillColor: [94, 53, 177], fontSize: 10 },
-        styles: { fontSize: 8 },
-        margin: { left: 14 }
-      });
-    }
-
-    // Compliance Reports
-    if (complianceReports.length > 0) {
-      doc.addPage();
-      yPosition = 20;
-      doc.setFontSize(16);
-      doc.setTextColor(67, 160, 71);
-      doc.text('COMPLIANCE REPORTS', 14, yPosition);
-      yPosition += 10;
-
-      complianceReports.forEach((report, idx) => {
-        const controls = report.spec?.compliance?.controls || [];
-        const failedControls = controls.filter(c => (c.totalFail || 0) > 0);
-        const tableData = failedControls.length === 0
-          ? [['All controls passed', '', '', '']]
-          : failedControls.map(c => [
-              (c.id || '').substring(0, 15),
-              (c.name || '').substring(0, 50),
-              c.severity || '',
-              c.totalFail || 0
-            ]);
-
-        doc.autoTable({
-          startY: yPosition,
-          head: [[`Report: ${report.metadata.name} - ${report.spec?.compliance?.title || 'Compliance'}`]],
-          headStyles: { fillColor: [67, 160, 71], fontSize: 10 },
-          margin: { left: 14 }
-        });
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 2,
-          head: [['Control ID', 'Name', 'Severity', 'Failures']],
-          body: tableData,
-          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
-          styles: { fontSize: 7 },
-          margin: { left: 14 }
-        });
-
-        yPosition = doc.lastAutoTable.finalY + 10;
-        if (yPosition > 180 && idx < complianceReports.length - 1) {
-          doc.addPage();
-          yPosition = 20;
-        }
-      });
-    }
-
-    // Save PDF
-    doc.save(`trivy-complete-export-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // Export all reports with FULL DETAILS to CSV
