@@ -485,150 +485,466 @@ const ReportsView = () => {
     URL.revokeObjectURL(link.href);
   };
 
-  // Export all reports summary to CSV
+  // Export all reports with FULL DETAILS to PDF
+  const exportAllToPDF = () => {
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    const namespace = selectedNamespace || 'All Namespaces';
+    let yPosition = 20;
+
+    // Title Page
+    doc.setFontSize(20);
+    doc.setTextColor(33, 37, 41);
+    doc.text('Trivy Operator - Complete Reports Export', 14, yPosition);
+
+    yPosition += 10;
+    doc.setFontSize(12);
+    doc.text(`Namespace: ${namespace}`, 14, yPosition);
+
+    yPosition += 7;
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, yPosition);
+
+    yPosition += 7;
+    doc.text(`Total Reports: Vuln=${vulnReports.length}, Config=${configReports.length}, Secrets=${secretReports.length}, RBAC=${rbacReports.length}, Infra=${infraReports.length}, SBOM=${sbomReports.length}, KBOM=${kbomReports.length}, Compliance=${complianceReports.length}`, 14, yPosition);
+
+    // Vulnerability Reports
+    if (vulnReports.length > 0) {
+      doc.addPage();
+      yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(211, 47, 47);
+      doc.text('VULNERABILITY REPORTS', 14, yPosition);
+      yPosition += 10;
+
+      vulnReports.forEach((report, idx) => {
+        const vulns = report.report.vulnerabilities || [];
+        const tableData = vulns.length === 0
+          ? [['No vulnerabilities found', '', '', '', '']]
+          : vulns.map(v => [
+              (v.vulnerabilityID || '').substring(0, 20),
+              (v.resource || v.pkgName || '').substring(0, 30),
+              (v.installedVersion || '').substring(0, 15),
+              (v.fixedVersion || '').substring(0, 15),
+              v.severity || ''
+            ]);
+
+        doc.autoTable({
+          startY: yPosition,
+          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
+          headStyles: { fillColor: [211, 47, 47], fontSize: 10 },
+          margin: { left: 14 },
+          styles: { fontSize: 8 }
+        });
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 2,
+          head: [['CVE ID', 'Package', 'Installed', 'Fixed', 'Severity']],
+          body: tableData,
+          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+          styles: { fontSize: 7 },
+          margin: { left: 14 }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+        if (yPosition > 180 && idx < vulnReports.length - 1) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      });
+    }
+
+    // Config Audit Reports
+    if (configReports.length > 0) {
+      doc.addPage();
+      yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(245, 124, 0);
+      doc.text('CONFIGURATION AUDIT REPORTS', 14, yPosition);
+      yPosition += 10;
+
+      configReports.forEach((report, idx) => {
+        const checks = report.report.checks || [];
+        const tableData = checks.length === 0
+          ? [['No issues found', '', '', '']]
+          : checks.filter(c => !c.success).map(c => [
+              (c.checkID || '').substring(0, 15),
+              (c.title || '').substring(0, 50),
+              c.severity || '',
+              c.success ? 'PASS' : 'FAIL'
+            ]);
+
+        doc.autoTable({
+          startY: yPosition,
+          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
+          headStyles: { fillColor: [245, 124, 0], fontSize: 10 },
+          margin: { left: 14 }
+        });
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 2,
+          head: [['Check ID', 'Title', 'Severity', 'Status']],
+          body: tableData,
+          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+          styles: { fontSize: 7 },
+          margin: { left: 14 }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+        if (yPosition > 180 && idx < configReports.length - 1) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      });
+    }
+
+    // Exposed Secrets
+    if (secretReports.length > 0) {
+      doc.addPage();
+      yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(156, 39, 176);
+      doc.text('EXPOSED SECRETS REPORTS', 14, yPosition);
+      yPosition += 10;
+
+      secretReports.forEach((report, idx) => {
+        const secrets = report.report.secrets || [];
+        const tableData = secrets.length === 0
+          ? [['No secrets found', '', '', '']]
+          : secrets.map(s => [
+              (s.ruleID || '').substring(0, 20),
+              (s.title || '').substring(0, 40),
+              s.severity || '',
+              (s.target || '').substring(0, 30)
+            ]);
+
+        doc.autoTable({
+          startY: yPosition,
+          head: [[`Report: ${report.metadata.name} (${report.metadata.namespace})`]],
+          headStyles: { fillColor: [156, 39, 176], fontSize: 10 },
+          margin: { left: 14 }
+        });
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 2,
+          head: [['Rule ID', 'Title', 'Severity', 'Target']],
+          body: tableData,
+          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+          styles: { fontSize: 7 },
+          margin: { left: 14 }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+        if (yPosition > 180 && idx < secretReports.length - 1) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      });
+    }
+
+    // SBOM Reports Summary
+    if (sbomReports.length > 0) {
+      doc.addPage();
+      yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(94, 53, 177);
+      doc.text('SBOM REPORTS - Component Summary', 14, yPosition);
+      yPosition += 10;
+
+      const sbomSummaryData = sbomReports.map(report => [
+        report.metadata.name,
+        report.metadata.namespace,
+        report.report.components?.components?.length || 0,
+        report.report.scanner?.name || 'N/A'
+      ]);
+
+      doc.autoTable({
+        startY: yPosition,
+        head: [['Report Name', 'Namespace', 'Components', 'Scanner']],
+        body: sbomSummaryData,
+        headStyles: { fillColor: [94, 53, 177], fontSize: 10 },
+        styles: { fontSize: 8 },
+        margin: { left: 14 }
+      });
+    }
+
+    // Compliance Reports
+    if (complianceReports.length > 0) {
+      doc.addPage();
+      yPosition = 20;
+      doc.setFontSize(16);
+      doc.setTextColor(67, 160, 71);
+      doc.text('COMPLIANCE REPORTS', 14, yPosition);
+      yPosition += 10;
+
+      complianceReports.forEach((report, idx) => {
+        const controls = report.spec?.compliance?.controls || [];
+        const failedControls = controls.filter(c => (c.totalFail || 0) > 0);
+        const tableData = failedControls.length === 0
+          ? [['All controls passed', '', '', '']]
+          : failedControls.map(c => [
+              (c.id || '').substring(0, 15),
+              (c.name || '').substring(0, 50),
+              c.severity || '',
+              c.totalFail || 0
+            ]);
+
+        doc.autoTable({
+          startY: yPosition,
+          head: [[`Report: ${report.metadata.name} - ${report.spec?.compliance?.title || 'Compliance'}`]],
+          headStyles: { fillColor: [67, 160, 71], fontSize: 10 },
+          margin: { left: 14 }
+        });
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 2,
+          head: [['Control ID', 'Name', 'Severity', 'Failures']],
+          body: tableData,
+          headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+          styles: { fontSize: 7 },
+          margin: { left: 14 }
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+        if (yPosition > 180 && idx < complianceReports.length - 1) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      });
+    }
+
+    // Save PDF
+    doc.save(`trivy-complete-export-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  // Export all reports with FULL DETAILS to CSV
   const exportAllToCSV = () => {
     const csvRows = [];
     const namespace = selectedNamespace || 'All Namespaces';
 
     // Headers
-    csvRows.push(`Trivy Operator - All Reports Summary`);
-    csvRows.push(`Namespace: ${namespace}`);
-    csvRows.push(`Generated: ${new Date().toISOString()}`);
+    csvRows.push(`# Trivy Operator - Complete Reports Export`);
+    csvRows.push(`# Namespace: ${namespace}`);
+    csvRows.push(`# Generated: ${new Date().toISOString()}`);
+    csvRows.push(`# Total Reports: Vuln=${vulnReports.length} Config=${configReports.length} Secrets=${secretReports.length} RBAC=${rbacReports.length} Infra=${infraReports.length} SBOM=${sbomReports.length} KBOM=${kbomReports.length} Compliance=${complianceReports.length}`);
     csvRows.push('');
-    csvRows.push('Report Type,Report Name,Namespace,Critical,High,Medium,Low,Total Issues,Last Updated');
 
-    // Add Vulnerability Reports
-    vulnReports.forEach(report => {
-      const summary = report.report.summary;
-      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
-      csvRows.push([
-        'Vulnerability',
-        report.metadata.name,
-        report.metadata.namespace,
-        summary.criticalCount || 0,
-        summary.highCount || 0,
-        summary.mediumCount || 0,
-        summary.lowCount || 0,
-        total,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // Vulnerability Reports - Full Details
+    if (vulnReports.length > 0) {
+      csvRows.push('=== VULNERABILITY REPORTS ===');
+      csvRows.push('Report Name,Namespace,CVE ID,Package,Installed Version,Fixed Version,Severity,Score,Title,Description,Primary Link');
+      vulnReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const reportNs = report.metadata.namespace;
+        const vulns = report.report.vulnerabilities || [];
+        if (vulns.length === 0) {
+          csvRows.push([reportName, reportNs, 'No vulnerabilities found', '', '', '', '', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          vulns.forEach(vuln => {
+            csvRows.push([
+              reportName,
+              reportNs,
+              vuln.vulnerabilityID || '',
+              vuln.resource || vuln.pkgName || '',
+              vuln.installedVersion || '',
+              vuln.fixedVersion || '',
+              vuln.severity || '',
+              vuln.score || '',
+              vuln.title || '',
+              (vuln.description || '').substring(0, 200),
+              vuln.primaryLink || ''
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add Config Audit Reports
-    configReports.forEach(report => {
-      const summary = report.report.summary;
-      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
-      csvRows.push([
-        'Config Audit',
-        report.metadata.name,
-        report.metadata.namespace,
-        summary.criticalCount || 0,
-        summary.highCount || 0,
-        summary.mediumCount || 0,
-        summary.lowCount || 0,
-        total,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // Config Audit Reports - Full Details
+    if (configReports.length > 0) {
+      csvRows.push('=== CONFIGURATION AUDIT REPORTS ===');
+      csvRows.push('Report Name,Namespace,Check ID,Title,Category,Severity,Description,Success,Messages');
+      configReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const reportNs = report.metadata.namespace;
+        const checks = report.report.checks || [];
+        if (checks.length === 0) {
+          csvRows.push([reportName, reportNs, 'No issues found', '', '', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          checks.forEach(check => {
+            csvRows.push([
+              reportName,
+              reportNs,
+              check.checkID || '',
+              check.title || '',
+              check.category || '',
+              check.severity || '',
+              (check.description || '').substring(0, 200),
+              check.success ? 'Yes' : 'No',
+              (check.messages || []).join('; ')
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add Exposed Secret Reports
-    secretReports.forEach(report => {
-      const summary = report.report.summary;
-      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
-      csvRows.push([
-        'Exposed Secret',
-        report.metadata.name,
-        report.metadata.namespace,
-        summary.criticalCount || 0,
-        summary.highCount || 0,
-        summary.mediumCount || 0,
-        summary.lowCount || 0,
-        total,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // Exposed Secrets - Full Details
+    if (secretReports.length > 0) {
+      csvRows.push('=== EXPOSED SECRETS REPORTS ===');
+      csvRows.push('Report Name,Namespace,Rule ID,Category,Title,Severity,Target,Match');
+      secretReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const reportNs = report.metadata.namespace;
+        const secrets = report.report.secrets || [];
+        if (secrets.length === 0) {
+          csvRows.push([reportName, reportNs, 'No secrets found', '', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          secrets.forEach(secret => {
+            csvRows.push([
+              reportName,
+              reportNs,
+              secret.ruleID || '',
+              secret.category || '',
+              secret.title || '',
+              secret.severity || '',
+              secret.target || '',
+              secret.match || ''
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add RBAC Assessment Reports
-    rbacReports.forEach(report => {
-      const summary = report.report.summary;
-      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
-      csvRows.push([
-        'RBAC Assessment',
-        report.metadata.name,
-        report.metadata.namespace,
-        summary.criticalCount || 0,
-        summary.highCount || 0,
-        summary.mediumCount || 0,
-        summary.lowCount || 0,
-        total,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // RBAC Assessment - Full Details
+    if (rbacReports.length > 0) {
+      csvRows.push('=== RBAC ASSESSMENT REPORTS ===');
+      csvRows.push('Report Name,Namespace,Check ID,Title,Category,Severity,Description,Success');
+      rbacReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const reportNs = report.metadata.namespace;
+        const checks = report.report.checks || [];
+        if (checks.length === 0) {
+          csvRows.push([reportName, reportNs, 'No RBAC issues found', '', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          checks.forEach(check => {
+            csvRows.push([
+              reportName,
+              reportNs,
+              check.checkID || '',
+              check.title || '',
+              check.category || '',
+              check.severity || '',
+              (check.description || '').substring(0, 200),
+              check.success ? 'Yes' : 'No'
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add Infra Assessment Reports
-    infraReports.forEach(report => {
-      const summary = report.report.summary;
-      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
-      csvRows.push([
-        'Infra Assessment',
-        report.metadata.name,
-        'cluster-wide',
-        summary.criticalCount || 0,
-        summary.highCount || 0,
-        summary.mediumCount || 0,
-        summary.lowCount || 0,
-        total,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // Infrastructure Assessment - Full Details
+    if (infraReports.length > 0) {
+      csvRows.push('=== INFRASTRUCTURE ASSESSMENT REPORTS ===');
+      csvRows.push('Report Name,Check ID,Title,Category,Severity,Description,Success');
+      infraReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const checks = report.report.checks || [];
+        if (checks.length === 0) {
+          csvRows.push([reportName, 'No infrastructure issues found', '', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          checks.forEach(check => {
+            csvRows.push([
+              reportName,
+              check.checkID || '',
+              check.title || '',
+              check.category || '',
+              check.severity || '',
+              (check.description || '').substring(0, 200),
+              check.success ? 'Yes' : 'No'
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add SBOM Reports
-    sbomReports.forEach(report => {
-      const componentCount = report.report.components?.components?.length || 0;
-      csvRows.push([
-        'SBOM',
-        report.metadata.name,
-        report.metadata.namespace,
-        'N/A',
-        'N/A',
-        'N/A',
-        'N/A',
-        `${componentCount} components`,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // SBOM Reports
+    if (sbomReports.length > 0) {
+      csvRows.push('=== SBOM REPORTS ===');
+      csvRows.push('Report Name,Namespace,Component Name,Version,Type,Licenses');
+      sbomReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const reportNs = report.metadata.namespace;
+        const components = report.report.components?.components || [];
+        if (components.length === 0) {
+          csvRows.push([reportName, reportNs, 'No components found', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          components.forEach(comp => {
+            const licenses = (comp.licenses || []).map(l => l.license?.name || l.license?.id || 'Unknown').join('; ');
+            csvRows.push([
+              reportName,
+              reportNs,
+              comp.name || '',
+              comp.version || '',
+              comp.type || '',
+              licenses
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add KBOM Reports
-    kbomReports.forEach(report => {
-      const componentCount = report.report.components?.components?.length || 0;
-      csvRows.push([
-        'KBOM',
-        report.metadata.name,
-        'cluster-wide',
-        'N/A',
-        'N/A',
-        'N/A',
-        'N/A',
-        `${componentCount} components`,
-        report.report.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // KBOM Reports
+    if (kbomReports.length > 0) {
+      csvRows.push('=== KBOM REPORTS (Kubernetes Bill of Materials) ===');
+      csvRows.push('Report Name,Component Name,Version,Type');
+      kbomReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const components = report.report.components?.components || [];
+        if (components.length === 0) {
+          csvRows.push([reportName, 'No components found', '', ''].map(escapeCSV).join(','));
+        } else {
+          components.forEach(comp => {
+            csvRows.push([
+              reportName,
+              comp.name || '',
+              comp.version || '',
+              comp.type || ''
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
-    // Add Compliance Reports
-    complianceReports.forEach(report => {
-      const summary = report.status?.summary || {};
-      csvRows.push([
-        'Compliance',
-        report.metadata.name,
-        'cluster-wide',
-        summary.failCount || 0,
-        summary.warnCount || 0,
-        summary.passCount || 0,
-        summary.skipCount || 0,
-        `Pass: ${summary.passCount || 0}, Fail: ${summary.failCount || 0}`,
-        report.status?.updateTimestamp || 'N/A'
-      ].map(escapeCSV).join(','));
-    });
+    // Compliance Reports
+    if (complianceReports.length > 0) {
+      csvRows.push('=== COMPLIANCE REPORTS ===');
+      csvRows.push('Report Name,Compliance Type,Control ID,Name,Severity,Total Fail,Description');
+      complianceReports.forEach(report => {
+        const reportName = report.metadata.name;
+        const complianceType = report.spec?.compliance?.title || 'Unknown';
+        const controls = report.spec?.compliance?.controls || [];
+        if (controls.length === 0) {
+          csvRows.push([reportName, complianceType, 'No controls found', '', '', '', ''].map(escapeCSV).join(','));
+        } else {
+          controls.forEach(control => {
+            csvRows.push([
+              reportName,
+              complianceType,
+              control.id || '',
+              control.name || '',
+              control.severity || '',
+              control.totalFail || 0,
+              (control.description || '').substring(0, 200)
+            ].map(escapeCSV).join(','));
+          });
+        }
+      });
+      csvRows.push('');
+    }
 
     // Create CSV content
     const csvContent = csvRows.join('\n');
@@ -637,7 +953,7 @@ const ReportsView = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `trivy-all-reports-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `trivy-complete-export-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -656,7 +972,18 @@ const ReportsView = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">All Reports</Typography>
         <Box display="flex" gap={2} alignItems="center">
-          <Tooltip title="Download summary of all reports as CSV">
+          <Tooltip title="Download complete details of all reports as PDF">
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              startIcon={<DownloadIcon />}
+              onClick={exportAllToPDF}
+            >
+              Export All (PDF)
+            </Button>
+          </Tooltip>
+          <Tooltip title="Download complete details of all reports as CSV">
             <Button
               variant="contained"
               color="success"
