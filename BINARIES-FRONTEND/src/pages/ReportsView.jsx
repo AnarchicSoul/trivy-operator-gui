@@ -720,26 +720,38 @@ const ReportsView = () => {
     }
   };
 
-  // Export all reports with FULL DETAILS to CSV
+  // Helper function to download a CSV file
+  const downloadCSV = (filename, content) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Export all reports as SEPARATE CSV files by category
+  // Export all reports as SEPARATE CSV files by category
   const exportAllToCSV = () => {
-    const csvRows = [];
-    const namespace = selectedNamespace || 'All Namespaces';
+    const namespace = selectedNamespace || 'All-Namespaces';
+    const date = new Date().toISOString().split('T')[0];
+    const namespaceSlug = namespace.replace(/[^a-z0-9]/gi, '-');
 
-    // Headers
-    csvRows.push(`# Trivy Operator - Complete Reports Export`);
-    csvRows.push(`# Namespace: ${namespace}`);
-    csvRows.push(`# Generated: ${new Date().toISOString()}`);
-    csvRows.push(`# Total Reports: Vuln=${vulnReports.length} Config=${configReports.length} Secrets=${secretReports.length} RBAC=${rbacReports.length} Infra=${infraReports.length} SBOM=${sbomReports.length} KBOM=${kbomReports.length} Compliance=${complianceReports.length}`);
-    csvRows.push('');
+    let filesDownloaded = 0;
 
-    // Vulnerability Reports - Full Details
+    // 1. Vulnerability Reports CSV
     if (vulnReports.length > 0) {
-      csvRows.push('=== VULNERABILITY REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - Vulnerability Reports');
+      csvRows.push(`# Namespace: ${namespace}`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Namespace,CVE ID,Package,Installed Version,Fixed Version,Severity,Score,Title,Description,Primary Link');
+
       vulnReports.forEach(report => {
         const reportName = report.metadata.name;
         const reportNs = report.metadata.namespace;
-        const vulns = report.report.vulnerabilities || [];
+        const vulns = report.report?.vulnerabilities || [];
         if (vulns.length === 0) {
           csvRows.push([reportName, reportNs, 'No vulnerabilities found', '', '', '', '', '', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -760,17 +772,24 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`${namespaceSlug}-vulnerabilities-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // Config Audit Reports - Full Details
+    // 2. Config Audit Reports CSV
     if (configReports.length > 0) {
-      csvRows.push('=== CONFIGURATION AUDIT REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - Configuration Audit Reports');
+      csvRows.push(`# Namespace: ${namespace}`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Namespace,Check ID,Title,Category,Severity,Description,Success,Messages');
+
       configReports.forEach(report => {
         const reportName = report.metadata.name;
         const reportNs = report.metadata.namespace;
-        const checks = report.report.checks || [];
+        const checks = report.report?.checks || [];
         if (checks.length === 0) {
           csvRows.push([reportName, reportNs, 'No issues found', '', '', '', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -789,17 +808,24 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`${namespaceSlug}-config-audit-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // Exposed Secrets - Full Details
+    // 3. Exposed Secrets CSV
     if (secretReports.length > 0) {
-      csvRows.push('=== EXPOSED SECRETS REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - Exposed Secrets Reports');
+      csvRows.push(`# Namespace: ${namespace}`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Namespace,Rule ID,Category,Title,Severity,Target,Match');
+
       secretReports.forEach(report => {
         const reportName = report.metadata.name;
         const reportNs = report.metadata.namespace;
-        const secrets = report.report.secrets || [];
+        const secrets = report.report?.secrets || [];
         if (secrets.length === 0) {
           csvRows.push([reportName, reportNs, 'No secrets found', '', '', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -817,17 +843,24 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`${namespaceSlug}-exposed-secrets-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // RBAC Assessment - Full Details
+    // 4. RBAC Assessment CSV
     if (rbacReports.length > 0) {
-      csvRows.push('=== RBAC ASSESSMENT REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - RBAC Assessment Reports');
+      csvRows.push(`# Namespace: ${namespace}`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Namespace,Check ID,Title,Category,Severity,Description,Success');
+
       rbacReports.forEach(report => {
         const reportName = report.metadata.name;
         const reportNs = report.metadata.namespace;
-        const checks = report.report.checks || [];
+        const checks = report.report?.checks || [];
         if (checks.length === 0) {
           csvRows.push([reportName, reportNs, 'No RBAC issues found', '', '', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -845,16 +878,23 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`${namespaceSlug}-rbac-assessment-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // Infrastructure Assessment - Full Details
+    // 5. Infrastructure Assessment CSV
     if (infraReports.length > 0) {
-      csvRows.push('=== INFRASTRUCTURE ASSESSMENT REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - Infrastructure Assessment Reports');
+      csvRows.push(`# Namespace: cluster-wide`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Check ID,Title,Category,Severity,Description,Success');
+
       infraReports.forEach(report => {
         const reportName = report.metadata.name;
-        const checks = report.report.checks || [];
+        const checks = report.report?.checks || [];
         if (checks.length === 0) {
           csvRows.push([reportName, 'No infrastructure issues found', '', '', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -871,17 +911,24 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`cluster-infra-assessment-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // SBOM Reports
+    // 6. SBOM Reports CSV
     if (sbomReports.length > 0) {
-      csvRows.push('=== SBOM REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - SBOM Reports (Software Bill of Materials)');
+      csvRows.push(`# Namespace: ${namespace}`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Namespace,Component Name,Version,Type,Licenses');
+
       sbomReports.forEach(report => {
         const reportName = report.metadata.name;
         const reportNs = report.metadata.namespace;
-        const components = report.report.components?.components || [];
+        const components = report.report?.components?.components || [];
         if (components.length === 0) {
           csvRows.push([reportName, reportNs, 'No components found', '', '', ''].map(escapeCSV).join(','));
         } else {
@@ -898,16 +945,23 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`${namespaceSlug}-sbom-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // KBOM Reports
+    // 7. KBOM Reports CSV
     if (kbomReports.length > 0) {
-      csvRows.push('=== KBOM REPORTS (Kubernetes Bill of Materials) ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - KBOM Reports (Kubernetes Bill of Materials)');
+      csvRows.push(`# Namespace: cluster-wide`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Component Name,Version,Type');
+
       kbomReports.forEach(report => {
         const reportName = report.metadata.name;
-        const components = report.report.components?.components || [];
+        const components = report.report?.components?.components || [];
         if (components.length === 0) {
           csvRows.push([reportName, 'No components found', '', ''].map(escapeCSV).join(','));
         } else {
@@ -921,13 +975,20 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`cluster-kbom-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // Compliance Reports
+    // 8. Compliance Reports CSV
     if (complianceReports.length > 0) {
-      csvRows.push('=== COMPLIANCE REPORTS ===');
+      const csvRows = [];
+      csvRows.push('# Trivy Operator - Compliance Reports');
+      csvRows.push(`# Namespace: cluster-wide`);
+      csvRows.push(`# Generated: ${new Date().toISOString()}`);
+      csvRows.push('');
       csvRows.push('Report Name,Compliance Type,Control ID,Name,Severity,Total Fail,Description');
+
       complianceReports.forEach(report => {
         const reportName = report.metadata.name;
         const complianceType = report.spec?.compliance?.title || 'Unknown';
@@ -948,21 +1009,18 @@ const ReportsView = () => {
           });
         }
       });
-      csvRows.push('');
+
+      setTimeout(() => downloadCSV(`cluster-compliance-${date}.csv`, csvRows.join('\n')), filesDownloaded * 100);
+      filesDownloaded++;
     }
 
-    // Create CSV content
-    const csvContent = csvRows.join('\n');
-
-    // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `trivy-complete-export-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+    // Show alert
+    if (filesDownloaded > 0) {
+      alert(`Téléchargement de ${filesDownloaded} fichiers CSV séparés en cours...`);
+    } else {
+      alert('Aucun rapport à exporter');
+    }
   };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
