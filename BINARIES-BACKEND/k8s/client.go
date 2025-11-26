@@ -518,3 +518,47 @@ func (c *Client) GetInfraAssessmentReportsLimited(ctx context.Context, limit int
 
 	return &reportList, nil
 }
+}
+
+// GetSBOMReportsLimited retrieves a limited number of SBOM Reports
+func (c *Client) GetSBOMReportsLimited(ctx context.Context, namespace string, limit int64) (*models.SBOMReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(SBOMReportGVR).
+		Namespace(namespace).
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list SBOM reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal SBOM reports to JSON: %w", err)
+	}
+
+	var reportList models.SBOMReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal SBOM reports: %w", err)
+	}
+
+	return &reportList, nil
+}
+
+// GetComplianceReportsLimited retrieves a limited number of Compliance Reports
+func (c *Client) GetComplianceReportsLimited(ctx context.Context, limit int64) (*models.ComplianceReportList, error) {
+	unstructuredList, err := c.DynamicClient.Resource(ClusterComplianceReportGVR).
+		List(ctx, metav1.ListOptions{Limit: limit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list cluster compliance reports: %w", err)
+	}
+
+	data, err := unstructuredList.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal cluster compliance reports to JSON: %w", err)
+	}
+
+	var reportList models.ComplianceReportList
+	if err := json.Unmarshal(data, &reportList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal cluster compliance reports: %w", err)
+	}
+
+	return &reportList, nil
+}

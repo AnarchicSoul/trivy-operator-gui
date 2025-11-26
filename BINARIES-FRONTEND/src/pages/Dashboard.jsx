@@ -33,6 +33,8 @@ import WarningIcon from '@mui/icons-material/Warning';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import SecurityIcon from '@mui/icons-material/Security';
 import CloudIcon from '@mui/icons-material/Cloud';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { getDashboard, getNamespaces } from '../services/api';
 
 const SEVERITY_COLORS = {
@@ -139,6 +141,13 @@ const Dashboard = () => {
     { name: 'Low', value: dashboard.infraIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
+  const complianceData = [
+    { name: 'Pass', value: dashboard.complianceStatusSummary?.passCount || 0, color: '#43a047' },
+    { name: 'Fail', value: dashboard.complianceStatusSummary?.failCount || 0, color: '#d32f2f' },
+    { name: 'Warn', value: dashboard.complianceStatusSummary?.warnCount || 0, color: '#fbc02d' },
+    { name: 'Skip', value: dashboard.complianceStatusSummary?.skipCount || 0, color: '#757575' },
+  ].filter(item => item.value > 0);
+
   const namespaceData = Object.entries(dashboard.podsByNamespace || {}).map(([name, count]) => ({
     namespace: name,
     pods: count,
@@ -243,6 +252,32 @@ const Dashboard = () => {
                   <Typography variant="h3">{dashboard.totalInfraIssues || 0}</Typography>
                 </Box>
                 <CloudIcon sx={{ fontSize: 60, opacity: 0.3 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ bgcolor: '#5e35b1', color: 'white' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">SBOM Reports</Typography>
+                  <Typography variant="h3">{dashboard.totalSbomReports || 0}</Typography>
+                </Box>
+                <InventoryIcon sx={{ fontSize: 60, opacity: 0.3 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ bgcolor: '#43a047', color: 'white' }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6">Compliance Reports</Typography>
+                  <Typography variant="h3">{dashboard.totalComplianceReports || 0}</Typography>
+                </Box>
+                <AssignmentTurnedInIcon sx={{ fontSize: 60, opacity: 0.3 }} />
               </Box>
             </CardContent>
           </Card>
@@ -421,6 +456,40 @@ const Dashboard = () => {
             ) : (
               <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
                 No infrastructure issue data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Compliance Status Distribution */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Compliance Status Distribution
+            </Typography>
+            {complianceData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={complianceData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
+                    {complianceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
+                No compliance data available
               </Typography>
             )}
           </Paper>

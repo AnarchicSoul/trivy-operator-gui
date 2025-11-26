@@ -70,14 +70,30 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 		return
 	}
 
+	// Get limited SBOM reports
+	sbomReports, err := h.K8sClient.GetSBOMReportsLimited(ctx, namespace, dashboardLimit)
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get limited Compliance reports
+	complianceReports, err := h.K8sClient.GetComplianceReportsLimited(ctx, dashboardLimit)
+	if err != nil {
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Build dashboard summary
-	dashboard := h.buildDashboardSummary(vulnReports, configReports, secretReports, rbacReports, infraReports)
+	dashboard := h.buildDashboardSummary(vulnReports, configReports, secretReports, rbacReports, infraReports, sbomReports, complianceReports)
 
 	c.JSON(http.StatusOK, dashboard)
 }
 
 // buildDashboardSummary aggregates report data into a dashboard summary
-func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportList, configReports *models.ConfigAuditReportList, secretReports *models.ExposedSecretReportList, rbacReports *models.RbacAssessmentReportList, infraReports *models.InfraAssessmentReportList) models.DashboardSummary {
+func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportList, configReports *models.ConfigAuditReportList, secretReports *models.ExposedSecretReportList, rbacReports *models.RbacAssessmentReportList, infraReports *models.InfraAssessmentReportList, sbomReports *models.SBOMReportList, complianceReports *models.ComplianceReportList) models.DashboardSummary {
 	dashboard := models.DashboardSummary{
 		PodsByNamespace:        make(map[string]int),
 		VulnerabilitiesBySeverity: make(map[string]int),
@@ -199,6 +215,27 @@ func (h *Handler) buildDashboardSummary(vulnReports *models.VulnerabilityReportL
 			if !check.Success {
 				totalInfraIssues++
 			}
+		}
+	}
+
+	// Process SBOM reports
+	dashboard.TotalSbomReports = len(sbomReports.Items)
+
+	// Process Compliance reports
+	dashboard.TotalComplianceReports = len(complianceReports.Items)
+	for _, report := range complianceReports.Items {
+		// Aggregate compliance status summary
+		if report.Status.Summary.PassCount > 0 {
+			dashboard.ComplianceStatusSummary.PassCount += report.Status.Summary.PassCount
+		}
+		if report.Status.Summary.FailCount > 0 {
+			dashboard.ComplianceStatusSummary.FailCount += report.Status.Summary.FailCount
+		}
+		if report.Status.Summary.WarnCount > 0 {
+			dashboard.ComplianceStatusSummary.WarnCount += report.Status.Summary.WarnCount
+		}
+		if report.Status.Summary.SkipCount > 0 {
+			dashboard.ComplianceStatusSummary.SkipCount += report.Status.Summary.SkipCount
 		}
 	}
 
