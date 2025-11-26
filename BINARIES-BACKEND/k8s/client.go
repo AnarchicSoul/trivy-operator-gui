@@ -518,7 +518,6 @@ func (c *Client) GetInfraAssessmentReportsLimited(ctx context.Context, limit int
 
 	return &reportList, nil
 }
-}
 
 // GetSBOMReportsLimited retrieves a limited number of SBOM Reports
 func (c *Client) GetSBOMReportsLimited(ctx context.Context, namespace string, limit int64) (*models.SBOMReportList, error) {
