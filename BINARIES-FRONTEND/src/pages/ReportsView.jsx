@@ -25,6 +25,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
   Button,
   Link,
@@ -77,6 +78,8 @@ const ReportsView = () => {
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [showAllNamespacesWarning, setShowAllNamespacesWarning] = useState(false);
+  const [pendingNamespace, setPendingNamespace] = useState('');
 
   // Pagination states for each tab
   const [vulnPage, setVulnPage] = useState(0);
@@ -101,6 +104,11 @@ const ReportsView = () => {
       const response = await getNamespaces();
       const nsList = response.data.namespaces || [];
       setNamespaces(nsList);
+
+      // Set first namespace as default for better performance
+      if (nsList.length > 0 && selectedNamespace === '') {
+        setSelectedNamespace(nsList[0]);
+      }
     } catch (err) {
       console.error('Failed to fetch namespaces:', err);
     }
@@ -242,6 +250,26 @@ const ReportsView = () => {
   const handleCloseDetail = () => {
     setDetailDialogOpen(false);
     setSelectedReport(null);
+  };
+
+  const handleNamespaceChange = (newNamespace) => {
+    // If user selects "All Namespaces", show warning
+    if (newNamespace === '') {
+      setPendingNamespace(newNamespace);
+      setShowAllNamespacesWarning(true);
+    } else {
+      setSelectedNamespace(newNamespace);
+    }
+  };
+
+  const confirmAllNamespaces = () => {
+    setSelectedNamespace(pendingNamespace);
+    setShowAllNamespacesWarning(false);
+  };
+
+  const cancelAllNamespaces = () => {
+    setShowAllNamespacesWarning(false);
+    setPendingNamespace('');
   };
 
   const formatDate = (timestamp) => {
@@ -1061,7 +1089,7 @@ const ReportsView = () => {
             <InputLabel>Namespace</InputLabel>
             <Select
               value={selectedNamespace}
-              onChange={(e) => setSelectedNamespace(e.target.value)}
+              onChange={(e) => handleNamespaceChange(e.target.value)}
               label="Namespace"
             >
               <MenuItem value="">All Namespaces</MenuItem>
@@ -2366,6 +2394,32 @@ const ReportsView = () => {
         <DialogActions>
           <Button onClick={handleCloseDetail} color="primary">
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Warning Dialog for All Namespaces */}
+      <Dialog
+        open={showAllNamespacesWarning}
+        onClose={cancelAllNamespaces}
+        aria-labelledby="warning-dialog-title"
+        aria-describedby="warning-dialog-description"
+      >
+        <DialogTitle id="warning-dialog-title">
+          Avertissement: Tous les Namespaces
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="warning-dialog-description">
+            La sélection de "Tous les Namespaces" peut entraîner le chargement d'un grand nombre de rapports,
+            ce qui pourrait ralentir l'application ou provoquer un timeout. Voulez-vous continuer ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelAllNamespaces} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={confirmAllNamespaces} color="primary" autoFocus>
+            Continuer
           </Button>
         </DialogActions>
       </Dialog>

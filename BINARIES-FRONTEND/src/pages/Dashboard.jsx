@@ -13,6 +13,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  DialogContentText,
 } from '@mui/material';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -31,11 +37,19 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [namespaces, setNamespaces] = useState([]);
   const [selectedNamespace, setSelectedNamespace] = useState('');
+  const [showAllNamespacesWarning, setShowAllNamespacesWarning] = useState(false);
+  const [pendingNamespace, setPendingNamespace] = useState('');
 
   const fetchNamespaces = async () => {
     try {
       const response = await getNamespaces();
-      setNamespaces(response.data.namespaces || []);
+      const nsList = response.data.namespaces || [];
+      setNamespaces(nsList);
+
+      // Set first namespace as default for better performance
+      if (nsList.length > 0 && selectedNamespace === '') {
+        setSelectedNamespace(nsList[0]);
+      }
     } catch (err) {
       console.error('Failed to fetch namespaces:', err);
     }
@@ -54,12 +68,34 @@ const Dashboard = () => {
     }
   };
 
+  const handleNamespaceChange = (newNamespace) => {
+    // If user selects "All Namespaces", show warning
+    if (newNamespace === '') {
+      setPendingNamespace(newNamespace);
+      setShowAllNamespacesWarning(true);
+    } else {
+      setSelectedNamespace(newNamespace);
+    }
+  };
+
+  const confirmAllNamespaces = () => {
+    setSelectedNamespace(pendingNamespace);
+    setShowAllNamespacesWarning(false);
+  };
+
+  const cancelAllNamespaces = () => {
+    setShowAllNamespacesWarning(false);
+    setPendingNamespace('');
+  };
+
   useEffect(() => {
     fetchNamespaces();
   }, []);
 
   useEffect(() => {
-    fetchDashboard();
+    if (selectedNamespace !== '') {
+      fetchDashboard();
+    }
   }, [selectedNamespace]);
 
   if (loading) {
@@ -94,7 +130,7 @@ const Dashboard = () => {
           <InputLabel>Namespace</InputLabel>
           <Select
             value={selectedNamespace}
-            onChange={(e) => setSelectedNamespace(e.target.value)}
+            onChange={(e) => handleNamespaceChange(e.target.value)}
             label="Namespace"
           >
             <MenuItem value="">All Namespaces</MenuItem>
@@ -235,6 +271,32 @@ const Dashboard = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Warning Dialog for All Namespaces */}
+      <Dialog
+        open={showAllNamespacesWarning}
+        onClose={cancelAllNamespaces}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Avertissement: Tous les Namespaces
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            La sélection de "Tous les Namespaces" peut entraîner le chargement d'un grand nombre de rapports,
+            ce qui pourrait ralentir l'application ou provoquer un timeout. Voulez-vous continuer ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelAllNamespaces} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={confirmAllNamespaces} color="primary" autoFocus>
+            Continuer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
