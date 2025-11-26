@@ -12,54 +12,44 @@ const api = axios.create({
 
 // Dashboard
 export const getDashboard = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/dashboard', { params });
+  return api.get('/dashboard', { params: { namespace } });
 };
 
 // Reports
 export const getAllReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports', { params });
+  return api.get('/reports', { params: { namespace } });
 };
 
 export const getVulnerabilityReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/vulnerability', { params });
+  return api.get('/reports/vulnerability', { params: { namespace } });
 };
 
 export const getConfigAuditReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/config-audit', { params });
+  return api.get('/reports/config-audit', { params: { namespace } });
 };
 
 export const getExposedSecretReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/exposed-secret', { params });
+  return api.get('/reports/exposed-secret', { params: { namespace } });
 };
 
 export const getRbacAssessmentReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/rbac-assessment', { params });
+  return api.get('/reports/rbac-assessment', { params: { namespace } });
 };
 
 export const getInfraAssessmentReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/infra-assessment', { params });
+  return api.get('/reports/infra-assessment', { params: { namespace } });
 };
 
 export const getSBOMReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/sbom', { params });
+  return api.get('/reports/sbom', { params: { namespace } });
 };
 
 export const getKBOMReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/kbom', { params });
+  return api.get('/reports/kbom', { params: { namespace } });
 };
 
 export const getComplianceReports = (namespace = '') => {
-  const params = namespace ? { namespace } : {};
-  return api.get('/reports/compliance', { params });
+  return api.get('/reports/compliance', { params: { namespace } });
 };
 
 // Categories
