@@ -494,6 +494,163 @@ const ReportsView = () => {
     URL.revokeObjectURL(link.href);
   };
 
+  // Export all reports summary to CSV
+  const exportAllToCSV = () => {
+    const csvRows = [];
+    const namespace = selectedNamespace || 'All Namespaces';
+
+    // Headers
+    csvRows.push(`Trivy Operator - All Reports Summary`);
+    csvRows.push(`Namespace: ${namespace}`);
+    csvRows.push(`Generated: ${new Date().toISOString()}`);
+    csvRows.push('');
+    csvRows.push('Report Type,Report Name,Namespace,Critical,High,Medium,Low,Total Issues,Last Updated');
+
+    // Add Vulnerability Reports
+    vulnReports.forEach(report => {
+      const summary = report.report.summary;
+      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
+      csvRows.push([
+        'Vulnerability',
+        report.metadata.name,
+        report.metadata.namespace,
+        summary.criticalCount || 0,
+        summary.highCount || 0,
+        summary.mediumCount || 0,
+        summary.lowCount || 0,
+        total,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add Config Audit Reports
+    configReports.forEach(report => {
+      const summary = report.report.summary;
+      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
+      csvRows.push([
+        'Config Audit',
+        report.metadata.name,
+        report.metadata.namespace,
+        summary.criticalCount || 0,
+        summary.highCount || 0,
+        summary.mediumCount || 0,
+        summary.lowCount || 0,
+        total,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add Exposed Secret Reports
+    secretReports.forEach(report => {
+      const summary = report.report.summary;
+      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
+      csvRows.push([
+        'Exposed Secret',
+        report.metadata.name,
+        report.metadata.namespace,
+        summary.criticalCount || 0,
+        summary.highCount || 0,
+        summary.mediumCount || 0,
+        summary.lowCount || 0,
+        total,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add RBAC Assessment Reports
+    rbacReports.forEach(report => {
+      const summary = report.report.summary;
+      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
+      csvRows.push([
+        'RBAC Assessment',
+        report.metadata.name,
+        report.metadata.namespace,
+        summary.criticalCount || 0,
+        summary.highCount || 0,
+        summary.mediumCount || 0,
+        summary.lowCount || 0,
+        total,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add Infra Assessment Reports
+    infraReports.forEach(report => {
+      const summary = report.report.summary;
+      const total = (summary.criticalCount || 0) + (summary.highCount || 0) + (summary.mediumCount || 0) + (summary.lowCount || 0);
+      csvRows.push([
+        'Infra Assessment',
+        report.metadata.name,
+        'cluster-wide',
+        summary.criticalCount || 0,
+        summary.highCount || 0,
+        summary.mediumCount || 0,
+        summary.lowCount || 0,
+        total,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add SBOM Reports
+    sbomReports.forEach(report => {
+      const componentCount = report.report.components?.components?.length || 0;
+      csvRows.push([
+        'SBOM',
+        report.metadata.name,
+        report.metadata.namespace,
+        'N/A',
+        'N/A',
+        'N/A',
+        'N/A',
+        `${componentCount} components`,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add KBOM Reports
+    kbomReports.forEach(report => {
+      const componentCount = report.report.components?.components?.length || 0;
+      csvRows.push([
+        'KBOM',
+        report.metadata.name,
+        'cluster-wide',
+        'N/A',
+        'N/A',
+        'N/A',
+        'N/A',
+        `${componentCount} components`,
+        report.report.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Add Compliance Reports
+    complianceReports.forEach(report => {
+      const summary = report.status?.summary || {};
+      csvRows.push([
+        'Compliance',
+        report.metadata.name,
+        'cluster-wide',
+        summary.failCount || 0,
+        summary.warnCount || 0,
+        summary.passCount || 0,
+        summary.skipCount || 0,
+        `Pass: ${summary.passCount || 0}, Fail: ${summary.failCount || 0}`,
+        report.status?.updateTimestamp || 'N/A'
+      ].map(escapeCSV).join(','));
+    });
+
+    // Create CSV content
+    const csvContent = csvRows.join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `trivy-all-reports-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -508,6 +665,17 @@ const ReportsView = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">All Reports</Typography>
         <Box display="flex" gap={2} alignItems="center">
+          <Tooltip title="Download summary of all reports as CSV">
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              startIcon={<TableViewIcon />}
+              onClick={exportAllToCSV}
+            >
+              Export All (CSV)
+            </Button>
+          </Tooltip>
           <FormControl sx={{ minWidth: 200 }} size="small">
             <InputLabel>Namespace</InputLabel>
             <Select
