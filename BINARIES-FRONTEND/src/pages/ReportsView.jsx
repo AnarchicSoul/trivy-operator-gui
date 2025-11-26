@@ -101,12 +101,6 @@ const ReportsView = () => {
       const response = await getNamespaces();
       const nsList = response.data.namespaces || [];
       setNamespaces(nsList);
-
-      // Set the first namespace as default for better performance
-      // User can still select "All Namespaces" if needed
-      if (nsList.length > 0 && selectedNamespace === '') {
-        setSelectedNamespace(nsList[0]);
-      }
     } catch (err) {
       console.error('Failed to fetch namespaces:', err);
     }
@@ -222,20 +216,16 @@ const ReportsView = () => {
   };
 
   useEffect(() => {
-    // On mount, fetch namespaces - this will set the default namespace
-    // which will trigger the selectedNamespace effect below
+    // On mount, fetch namespaces and initial data
     fetchNamespaces();
+    // Load initial tab data with "All Namespaces" (empty string is the default)
+    fetchTabData(tabValue);
   }, []);
 
   useEffect(() => {
     // When namespace changes, force reload current tab
-    // This triggers when:
-    // 1. Initial namespace is set (first namespace from the list)
-    // 2. User manually changes namespace
-    if (selectedNamespace !== null && selectedNamespace !== undefined) {
-      // Force reload current tab data with new namespace
-      fetchTabData(tabValue, true);
-    }
+    // Force reload current tab data with new namespace
+    fetchTabData(tabValue, true);
   }, [selectedNamespace]);
 
   const handleTabChange = (event, newValue) => {
@@ -257,6 +247,16 @@ const ReportsView = () => {
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     return new Date(timestamp).toLocaleString();
+  };
+
+  // Helper function to escape CSV values
+  const escapeCSV = (value) => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
   };
 
   // PDF Export function
@@ -425,15 +425,6 @@ const ReportsView = () => {
   // CSV Export function
   const exportToCSV = (report, reportType, event) => {
     event.stopPropagation();
-
-    const escapeCSV = (value) => {
-      if (value === null || value === undefined) return '';
-      const str = String(value);
-      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
 
     let headers = [];
     let rows = [];
@@ -1616,7 +1607,7 @@ const ReportsView = () => {
               {selectedReport?.metadata.name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {selectedReport && selectedReport.report && (
+              {selectedReport && (selectedReport.report || selectedReport.spec) && (
                 <>
                   <Tooltip title="Download PDF">
                     <IconButton
@@ -1626,7 +1617,9 @@ const ReportsView = () => {
                           ? 'Vulnerability Report'
                           : selectedReport.report.secrets
                           ? 'Exposed Secret Report'
-                          : 'Config/RBAC/Infra Report';
+                          : selectedReport.report.checks
+                          ? 'Config/RBAC/Infra Report'
+                          : 'SBOM/KBOM Report';
                         exportToPDF(selectedReport, reportType, e);
                       }}
                     >
@@ -1641,7 +1634,9 @@ const ReportsView = () => {
                           ? 'Vulnerability Report'
                           : selectedReport.report.secrets
                           ? 'Exposed Secret Report'
-                          : 'Config/RBAC/Infra Report';
+                          : selectedReport.report.checks
+                          ? 'Config/RBAC/Infra Report'
+                          : 'SBOM/KBOM Report';
                         exportToCSV(selectedReport, reportType, e);
                       }}
                     >

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Grid,
-  Paper,
   Typography,
   Box,
   CircularProgress,
@@ -15,19 +14,6 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import StorageIcon from '@mui/icons-material/Storage';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -37,14 +23,6 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { getDashboard, getNamespaces } from '../services/api';
-
-const SEVERITY_COLORS = {
-  CRITICAL: '#d32f2f',
-  HIGH: '#f57c00',
-  MEDIUM: '#fbc02d',
-  LOW: '#388e3c',
-  UNKNOWN: '#757575',
-};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -105,48 +83,6 @@ const Dashboard = () => {
   if (!dashboard) {
     return null;
   }
-
-  // Prepare data for charts
-  const vulnerabilityData = [
-    { name: 'Critical', value: dashboard.vulnerabilitySummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.vulnerabilitySummary.highCount, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.vulnerabilitySummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.vulnerabilitySummary.lowCount, color: SEVERITY_COLORS.LOW },
-    { name: 'Unknown', value: dashboard.vulnerabilitySummary.unknownCount, color: SEVERITY_COLORS.UNKNOWN },
-  ].filter(item => item.value > 0);
-
-  const configData = [
-    { name: 'Critical', value: dashboard.configIssueSummary.criticalCount, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.configIssueSummary.highCount, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.configIssueSummary.mediumCount, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.configIssueSummary.lowCount, color: SEVERITY_COLORS.LOW },
-  ].filter(item => item.value > 0);
-
-  const secretData = [
-    { name: 'Critical', value: dashboard.exposedSecretSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.exposedSecretSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.exposedSecretSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.exposedSecretSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
-  ].filter(item => item.value > 0);
-
-  const rbacData = [
-    { name: 'Critical', value: dashboard.rbacIssueSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.rbacIssueSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.rbacIssueSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.rbacIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
-  ].filter(item => item.value > 0);
-
-  const infraData = [
-    { name: 'Critical', value: dashboard.infraIssueSummary?.criticalCount || 0, color: SEVERITY_COLORS.CRITICAL },
-    { name: 'High', value: dashboard.infraIssueSummary?.highCount || 0, color: SEVERITY_COLORS.HIGH },
-    { name: 'Medium', value: dashboard.infraIssueSummary?.mediumCount || 0, color: SEVERITY_COLORS.MEDIUM },
-    { name: 'Low', value: dashboard.infraIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
-  ].filter(item => item.value > 0);
-
-  const namespaceData = Object.entries(dashboard.podsByNamespace || {}).map(([name, count]) => ({
-    namespace: name,
-    pods: count,
-  }));
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -297,184 +233,6 @@ const Dashboard = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
-
-      {/* Charts */}
-      <Grid container spacing={3}>
-        {/* Vulnerabilities by Severity */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Vulnerabilities by Severity
-            </Typography>
-            {vulnerabilityData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={vulnerabilityData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {vulnerabilityData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No vulnerability data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Config Issues by Severity */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Configuration Issues by Severity
-            </Typography>
-            {configData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={configData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#8884d8">
-                    {configData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No configuration issue data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Pods by Namespace */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Pods by Namespace
-            </Typography>
-            {namespaceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={namespaceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="namespace" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="pods" fill="#1976d2" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No namespace data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Exposed Secrets by Severity */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Exposed Secrets by Severity
-            </Typography>
-            {secretData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={secretData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#9c27b0">
-                    {secretData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No exposed secret data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* RBAC Issues by Severity */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              RBAC Issues by Severity
-            </Typography>
-            {rbacData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={rbacData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#00796b">
-                    {rbacData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No RBAC issue data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Infrastructure Issues by Severity */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Infrastructure Issues by Severity
-            </Typography>
-            {infraData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={infraData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#0288d1">
-                    {infraData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No infrastructure issue data available
-              </Typography>
-            )}
-          </Paper>
         </Grid>
       </Grid>
     </Container>
