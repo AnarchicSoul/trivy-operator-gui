@@ -409,11 +409,11 @@ func (c *Client) GetComplianceReports(ctx context.Context) (*models.ComplianceRe
 	return &reportList, nil
 }
 
-// GetVulnerabilityReportsLimited retrieves a limited number of VulnerabilityReports from all namespaces
-// This is useful for dashboard statistics without loading all detailed data
-func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, limit int64) (*models.VulnerabilityReportList, error) {
+// GetVulnerabilityReportsLimited retrieves a limited number of VulnerabilityReports from specified namespace
+// Pass empty string for namespace to query all namespaces
+func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, namespace string, limit int64) (*models.VulnerabilityReportList, error) {
 	unstructuredList, err := c.DynamicClient.Resource(VulnerabilityReportGVR).
-		Namespace("").
+		Namespace(namespace).
 		List(ctx, metav1.ListOptions{Limit: limit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list vulnerability reports: %w", err)
@@ -432,10 +432,10 @@ func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, limit int64
 	return &reportList, nil
 }
 
-// GetConfigAuditReportsLimited retrieves a limited number of ConfigAuditReports from all namespaces
-func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, limit int64) (*models.ConfigAuditReportList, error) {
+// GetConfigAuditReportsLimited retrieves a limited number of ConfigAuditReports from specified namespace
+func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, namespace string, limit int64) (*models.ConfigAuditReportList, error) {
 	unstructuredList, err := c.DynamicClient.Resource(ConfigAuditReportGVR).
-		Namespace("").
+		Namespace(namespace).
 		List(ctx, metav1.ListOptions{Limit: limit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list config audit reports: %w", err)
@@ -454,10 +454,10 @@ func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, limit int64) 
 	return &reportList, nil
 }
 
-// GetExposedSecretReportsLimited retrieves a limited number of ExposedSecretReports from all namespaces
-func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, limit int64) (*models.ExposedSecretReportList, error) {
+// GetExposedSecretReportsLimited retrieves a limited number of ExposedSecretReports from specified namespace
+func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, namespace string, limit int64) (*models.ExposedSecretReportList, error) {
 	unstructuredList, err := c.DynamicClient.Resource(ExposedSecretReportGVR).
-		Namespace("").
+		Namespace(namespace).
 		List(ctx, metav1.ListOptions{Limit: limit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list exposed secret reports: %w", err)
@@ -476,10 +476,10 @@ func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, limit int64
 	return &reportList, nil
 }
 
-// GetRbacAssessmentReportsLimited retrieves a limited number of RbacAssessmentReports from all namespaces
-func (c *Client) GetRbacAssessmentReportsLimited(ctx context.Context, limit int64) (*models.RbacAssessmentReportList, error) {
+// GetRbacAssessmentReportsLimited retrieves a limited number of RbacAssessmentReports from specified namespace
+func (c *Client) GetRbacAssessmentReportsLimited(ctx context.Context, namespace string, limit int64) (*models.RbacAssessmentReportList, error) {
 	unstructuredList, err := c.DynamicClient.Resource(RbacAssessmentReportGVR).
-		Namespace("").
+		Namespace(namespace).
 		List(ctx, metav1.ListOptions{Limit: limit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list RBAC assessment reports: %w", err)

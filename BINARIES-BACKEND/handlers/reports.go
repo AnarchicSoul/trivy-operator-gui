@@ -93,7 +93,7 @@ func (h *Handler) GetVulnerabilityReports(c *gin.Context) {
 	if limitStr != "" {
 		var limit int64
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
-			reports, err = h.K8sClient.GetVulnerabilityReportsLimited(ctx, limit)
+			reports, err = h.K8sClient.GetVulnerabilityReportsLimited(ctx, namespace, limit)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -133,7 +133,7 @@ func (h *Handler) GetConfigAuditReports(c *gin.Context) {
 	if limitStr != "" {
 		var limit int64
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
-			reports, err = h.K8sClient.GetConfigAuditReportsLimited(ctx, limit)
+			reports, err = h.K8sClient.GetConfigAuditReportsLimited(ctx, namespace, limit)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -173,7 +173,7 @@ func (h *Handler) GetExposedSecretReports(c *gin.Context) {
 	if limitStr != "" {
 		var limit int64
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
-			reports, err = h.K8sClient.GetExposedSecretReportsLimited(ctx, limit)
+			reports, err = h.K8sClient.GetExposedSecretReportsLimited(ctx, namespace, limit)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -213,7 +213,7 @@ func (h *Handler) GetRbacAssessmentReports(c *gin.Context) {
 	if limitStr != "" {
 		var limit int64
 		if _, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && limit > 0 {
-			reports, err = h.K8sClient.GetRbacAssessmentReportsLimited(ctx, limit)
+			reports, err = h.K8sClient.GetRbacAssessmentReportsLimited(ctx, namespace, limit)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return

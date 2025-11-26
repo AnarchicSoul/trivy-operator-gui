@@ -32,29 +32,29 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 	// This significantly reduces memory usage - only need a small sample for stats
 	const dashboardLimit = int64(20)
 
-	// Get limited vulnerability reports for statistics
-	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, dashboardLimit)
+	// Get limited vulnerability reports for statistics (from all namespaces)
+	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, "", dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited config audit reports
-	configReports, err := h.K8sClient.GetConfigAuditReportsLimited(ctx, dashboardLimit)
+	configReports, err := h.K8sClient.GetConfigAuditReportsLimited(ctx, "", dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited exposed secret reports
-	secretReports, err := h.K8sClient.GetExposedSecretReportsLimited(ctx, dashboardLimit)
+	secretReports, err := h.K8sClient.GetExposedSecretReportsLimited(ctx, "", dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited RBAC assessment reports
-	rbacReports, err := h.K8sClient.GetRbacAssessmentReportsLimited(ctx, dashboardLimit)
+	rbacReports, err := h.K8sClient.GetRbacAssessmentReportsLimited(ctx, "", dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
