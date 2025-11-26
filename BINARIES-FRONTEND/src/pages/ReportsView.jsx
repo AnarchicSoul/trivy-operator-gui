@@ -590,6 +590,12 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport de vulnérabilité à exporter');
           }
           break;
 
@@ -635,6 +641,12 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport de configuration à exporter');
           }
           break;
 
@@ -680,6 +692,12 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport de secrets à exporter');
           }
           break;
 
@@ -725,6 +743,12 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport RBAC à exporter');
           }
           break;
 
@@ -770,6 +794,12 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport d\'infrastructure à exporter');
           }
           break;
 
@@ -797,6 +827,12 @@ const ReportsView = () => {
               styles: { fontSize: 8 },
               margin: { left: 14 }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport SBOM à exporter');
           }
           break;
 
@@ -823,6 +859,12 @@ const ReportsView = () => {
               styles: { fontSize: 8 },
               margin: { left: 14 }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport KBOM à exporter');
           }
           break;
 
@@ -869,13 +911,15 @@ const ReportsView = () => {
                 yPosition = 20;
               }
             });
+
+            // Save PDF with category-specific filename
+            const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+          } else {
+            alert('Aucun rapport de compliance à exporter');
           }
           break;
       }
-
-      // Save PDF with category-specific filename
-      const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
-      doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Erreur lors de la génération du PDF: ' + error.message);
