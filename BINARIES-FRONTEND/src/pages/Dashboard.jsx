@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -46,6 +47,7 @@ const SEVERITY_COLORS = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -141,13 +143,6 @@ const Dashboard = () => {
     { name: 'Low', value: dashboard.infraIssueSummary?.lowCount || 0, color: SEVERITY_COLORS.LOW },
   ].filter(item => item.value > 0);
 
-  const complianceData = [
-    { name: 'Pass', value: dashboard.complianceStatusSummary?.passCount || 0, color: '#43a047' },
-    { name: 'Fail', value: dashboard.complianceStatusSummary?.failCount || 0, color: '#d32f2f' },
-    { name: 'Warn', value: dashboard.complianceStatusSummary?.warnCount || 0, color: '#fbc02d' },
-    { name: 'Skip', value: dashboard.complianceStatusSummary?.skipCount || 0, color: '#757575' },
-  ].filter(item => item.value > 0);
-
   const namespaceData = Object.entries(dashboard.podsByNamespace || {}).map(([name, count]) => ({
     namespace: name,
     pods: count,
@@ -192,7 +187,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#d32f2f', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#d32f2f', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=0')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -205,7 +203,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#f57c00', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#f57c00', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=1')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -218,7 +219,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#9c27b0', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#9c27b0', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=2')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -231,7 +235,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#00796b', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#00796b', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=3')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -244,7 +251,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#0288d1', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#0288d1', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=4')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -257,7 +267,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#5e35b1', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#5e35b1', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=5')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -270,7 +283,10 @@ const Dashboard = () => {
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ bgcolor: '#43a047', color: 'white' }}>
+          <Card
+            sx={{ bgcolor: '#43a047', color: 'white', cursor: 'pointer', '&:hover': { opacity: 0.9 } }}
+            onClick={() => navigate('/reports?tab=7')}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -456,40 +472,6 @@ const Dashboard = () => {
             ) : (
               <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
                 No infrastructure issue data available
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Compliance Status Distribution */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Compliance Status Distribution
-            </Typography>
-            {complianceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={complianceData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {complianceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Typography variant="body2" color="textSecondary" align="center" sx={{ py: 4 }}>
-                No compliance data available
               </Typography>
             )}
           </Paper>
