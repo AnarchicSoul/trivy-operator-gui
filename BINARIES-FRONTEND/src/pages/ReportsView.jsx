@@ -103,44 +103,72 @@ const ReportsView = () => {
     }
   };
 
-  const fetchReports = async () => {
+  // Lazy loading: Only fetch data for the active tab
+  const fetchTabData = async (tabIndex) => {
     try {
       setLoading(true);
       setError(null);
 
-      const vulnResponse = await getVulnerabilityReports(selectedNamespace);
-      setVulnReports(vulnResponse.data.items || []);
-
-      const configResponse = await getConfigAuditReports(selectedNamespace);
-      setConfigReports(configResponse.data.items || []);
-
-      const secretResponse = await getExposedSecretReports(selectedNamespace);
-      setSecretReports(secretResponse.data.items || []);
-
-      const rbacResponse = await getRbacAssessmentReports(selectedNamespace);
-      setRbacReports(rbacResponse.data.items || []);
-
-      const infraResponse = await getInfraAssessmentReports();
-      setInfraReports(infraResponse.data.items || []);
-
-      const sbomResponse = await getSBOMReports(selectedNamespace);
-      setSbomReports(sbomResponse.data.items || []);
-
-      const kbomResponse = await getKBOMReports();
-      setKbomReports(kbomResponse.data.items || []);
-
-      const complianceResponse = await getComplianceReports();
-      setComplianceReports(complianceResponse.data.items || []);
-
-      // Reset pagination when data changes
-      setVulnPage(0);
-      setConfigPage(0);
-      setSecretPage(0);
-      setRbacPage(0);
-      setInfraPage(0);
-      setSbomPage(0);
-      setKbomPage(0);
-      setCompliancePage(0);
+      switch (tabIndex) {
+        case 0: // Vulnerability Reports
+          if (vulnReports.length === 0) {
+            const vulnResponse = await getVulnerabilityReports(selectedNamespace);
+            setVulnReports(vulnResponse.data.items || []);
+            setVulnPage(0);
+          }
+          break;
+        case 1: // Config Audit Reports
+          if (configReports.length === 0) {
+            const configResponse = await getConfigAuditReports(selectedNamespace);
+            setConfigReports(configResponse.data.items || []);
+            setConfigPage(0);
+          }
+          break;
+        case 2: // Exposed Secret Reports
+          if (secretReports.length === 0) {
+            const secretResponse = await getExposedSecretReports(selectedNamespace);
+            setSecretReports(secretResponse.data.items || []);
+            setSecretPage(0);
+          }
+          break;
+        case 3: // RBAC Assessment Reports
+          if (rbacReports.length === 0) {
+            const rbacResponse = await getRbacAssessmentReports(selectedNamespace);
+            setRbacReports(rbacResponse.data.items || []);
+            setRbacPage(0);
+          }
+          break;
+        case 4: // Infra Assessment Reports
+          if (infraReports.length === 0) {
+            const infraResponse = await getInfraAssessmentReports();
+            setInfraReports(infraResponse.data.items || []);
+            setInfraPage(0);
+          }
+          break;
+        case 5: // SBOM Reports
+          if (sbomReports.length === 0) {
+            const sbomResponse = await getSBOMReports(selectedNamespace);
+            setSbomReports(sbomResponse.data.items || []);
+            setSbomPage(0);
+          }
+          break;
+        case 6: // KBOM Reports
+          if (kbomReports.length === 0) {
+            const kbomResponse = await getKBOMReports();
+            setKbomReports(kbomResponse.data.items || []);
+            setKbomPage(0);
+          }
+          break;
+        case 7: // Compliance Reports
+          if (complianceReports.length === 0) {
+            const complianceResponse = await getComplianceReports();
+            setComplianceReports(complianceResponse.data.items || []);
+            setCompliancePage(0);
+          }
+          break;
+        default:
+          break;
+      }
     } catch (err) {
       setError(err.message || 'Failed to fetch reports');
     } finally {
@@ -148,16 +176,68 @@ const ReportsView = () => {
     }
   };
 
+  // Refresh all data for current tab
+  const refreshTabData = async () => {
+    // Clear current tab data to force reload
+    switch (tabValue) {
+      case 0:
+        setVulnReports([]);
+        break;
+      case 1:
+        setConfigReports([]);
+        break;
+      case 2:
+        setSecretReports([]);
+        break;
+      case 3:
+        setRbacReports([]);
+        break;
+      case 4:
+        setInfraReports([]);
+        break;
+      case 5:
+        setSbomReports([]);
+        break;
+      case 6:
+        setKbomReports([]);
+        break;
+      case 7:
+        setComplianceReports([]);
+        break;
+      default:
+        break;
+    }
+    // Fetch data for current tab
+    await fetchTabData(tabValue);
+  };
+
   useEffect(() => {
     fetchNamespaces();
+    // Load data for the first tab on mount
+    fetchTabData(0);
   }, []);
 
   useEffect(() => {
-    fetchReports();
+    // When namespace changes, clear all data and reload current tab
+    setVulnReports([]);
+    setConfigReports([]);
+    setSecretReports([]);
+    setRbacReports([]);
+    setInfraReports([]);
+    setSbomReports([]);
+    setKbomReports([]);
+    setComplianceReports([]);
+
+    // Reload current tab with new namespace
+    if (selectedNamespace !== '') {
+      fetchTabData(tabValue);
+    }
   }, [selectedNamespace]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    // Load data for the new tab
+    fetchTabData(newValue);
   };
 
   const handleOpenDetail = (report) => {
@@ -439,7 +519,7 @@ const ReportsView = () => {
               ))}
             </Select>
           </FormControl>
-          <IconButton onClick={fetchReports} color="primary">
+          <IconButton onClick={refreshTabData} color="primary">
             <RefreshIcon />
           </IconButton>
         </Box>

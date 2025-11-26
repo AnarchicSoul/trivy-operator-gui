@@ -133,10 +133,14 @@ func getConfig() (*rest.Config, error) {
 }
 
 // GetVulnerabilityReports retrieves all VulnerabilityReports from all namespaces
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetVulnerabilityReports(ctx context.Context, namespace string) (*models.VulnerabilityReportList, error) {
+	// Apply default limit to prevent loading excessive data
+	const defaultLimit = int64(50)
+
 	unstructuredList, err := c.DynamicClient.Resource(VulnerabilityReportGVR).
 		Namespace(namespace).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list vulnerability reports: %w", err)
 	}
@@ -161,10 +165,13 @@ func (c *Client) GetAllVulnerabilityReports(ctx context.Context) (*models.Vulner
 }
 
 // GetConfigAuditReports retrieves all ConfigAuditReports from a namespace
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetConfigAuditReports(ctx context.Context, namespace string) (*models.ConfigAuditReportList, error) {
+	const defaultLimit = int64(50)
+
 	unstructuredList, err := c.DynamicClient.Resource(ConfigAuditReportGVR).
 		Namespace(namespace).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list config audit reports: %w", err)
 	}
@@ -227,10 +234,13 @@ func (c *Client) GetVulnerabilityReportByName(ctx context.Context, namespace, na
 }
 
 // GetExposedSecretReports retrieves all ExposedSecretReports from a namespace
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetExposedSecretReports(ctx context.Context, namespace string) (*models.ExposedSecretReportList, error) {
+	const defaultLimit = int64(50)
+
 	unstructuredList, err := c.DynamicClient.Resource(ExposedSecretReportGVR).
 		Namespace(namespace).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list exposed secret reports: %w", err)
 	}
@@ -255,10 +265,13 @@ func (c *Client) GetAllExposedSecretReports(ctx context.Context) (*models.Expose
 }
 
 // GetRbacAssessmentReports retrieves all RbacAssessmentReports from a namespace
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetRbacAssessmentReports(ctx context.Context, namespace string) (*models.RbacAssessmentReportList, error) {
+	const defaultLimit = int64(50)
+
 	unstructuredList, err := c.DynamicClient.Resource(RbacAssessmentReportGVR).
 		Namespace(namespace).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list RBAC assessment reports: %w", err)
 	}
@@ -283,10 +296,13 @@ func (c *Client) GetAllRbacAssessmentReports(ctx context.Context) (*models.RbacA
 }
 
 // GetInfraAssessmentReports retrieves all ClusterInfraAssessmentReports (cluster-scoped)
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAssessmentReportList, error) {
+	const defaultLimit = int64(50)
+
 	// ClusterInfraAssessmentReports are cluster-scoped, so we don't specify a namespace
 	unstructuredList, err := c.DynamicClient.Resource(ClusterInfraAssessmentReportGVR).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list clusterinfraassessmentreports (GVR: %v): %w", ClusterInfraAssessmentReportGVR, err)
 	}
@@ -311,10 +327,13 @@ func (c *Client) GetInfraAssessmentReports(ctx context.Context) (*models.InfraAs
 }
 
 // GetSBOMReports retrieves all SBOM Reports from a namespace
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetSBOMReports(ctx context.Context, namespace string) (*models.SBOMReportList, error) {
+	const defaultLimit = int64(50)
+
 	unstructuredList, err := c.DynamicClient.Resource(SBOMReportGVR).
 		Namespace(namespace).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list SBOM reports: %w", err)
 	}
@@ -339,10 +358,13 @@ func (c *Client) GetAllSBOMReports(ctx context.Context) (*models.SBOMReportList,
 }
 
 // GetClusterSBOMReports retrieves all ClusterSBOM Reports (KBOM - cluster-scoped)
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetClusterSBOMReports(ctx context.Context) (*models.ClusterSBOMReportList, error) {
+	const defaultLimit = int64(50)
+
 	// ClusterSBOMReports are cluster-scoped, so we don't specify a namespace
 	unstructuredList, err := c.DynamicClient.Resource(ClusterSBOMReportGVR).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list clustersbomreports (GVR: %v): %w", ClusterSBOMReportGVR, err)
 	}
@@ -362,10 +384,13 @@ func (c *Client) GetClusterSBOMReports(ctx context.Context) (*models.ClusterSBOM
 }
 
 // GetComplianceReports retrieves all ClusterComplianceReports (cluster-scoped)
+// IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetComplianceReports(ctx context.Context) (*models.ComplianceReportList, error) {
+	const defaultLimit = int64(50)
+
 	// ClusterComplianceReports are cluster-scoped, so we don't specify a namespace
 	unstructuredList, err := c.DynamicClient.Resource(ClusterComplianceReportGVR).
-		List(ctx, metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{Limit: defaultLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list clustercompliancereports (GVR: %v): %w", ClusterComplianceReportGVR, err)
 	}

@@ -29,8 +29,8 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 	ctx := context.Background()
 
 	// Limit the number of reports loaded for dashboard statistics
-	// This significantly reduces memory usage
-	const dashboardLimit = int64(100)
+	// This significantly reduces memory usage - only need a small sample for stats
+	const dashboardLimit = int64(20)
 
 	// Get limited vulnerability reports for statistics
 	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, dashboardLimit)
