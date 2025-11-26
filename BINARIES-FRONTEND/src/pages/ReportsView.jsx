@@ -97,7 +97,14 @@ const ReportsView = () => {
   const fetchNamespaces = async () => {
     try {
       const response = await getNamespaces();
-      setNamespaces(response.data.namespaces || []);
+      const nsList = response.data.namespaces || [];
+      setNamespaces(nsList);
+
+      // Set the first namespace as default for better performance
+      // User can still select "All Namespaces" if needed
+      if (nsList.length > 0 && selectedNamespace === '') {
+        setSelectedNamespace(nsList[0]);
+      }
     } catch (err) {
       console.error('Failed to fetch namespaces:', err);
     }
@@ -212,24 +219,27 @@ const ReportsView = () => {
   };
 
   useEffect(() => {
+    // On mount, fetch namespaces - this will set the default namespace
+    // which will trigger the selectedNamespace effect below
     fetchNamespaces();
-    // Load data for the first tab on mount
-    fetchTabData(0);
   }, []);
 
   useEffect(() => {
     // When namespace changes, clear all data and reload current tab
-    setVulnReports([]);
-    setConfigReports([]);
-    setSecretReports([]);
-    setRbacReports([]);
-    setInfraReports([]);
-    setSbomReports([]);
-    setKbomReports([]);
-    setComplianceReports([]);
+    // This triggers when:
+    // 1. Initial namespace is set (first namespace from the list)
+    // 2. User manually changes namespace
+    if (selectedNamespace !== null && selectedNamespace !== undefined) {
+      setVulnReports([]);
+      setConfigReports([]);
+      setSecretReports([]);
+      setRbacReports([]);
+      setInfraReports([]);
+      setSbomReports([]);
+      setKbomReports([]);
+      setComplianceReports([]);
 
-    // Reload current tab with new namespace
-    if (selectedNamespace !== '') {
+      // Load data for current tab with the selected namespace
       fetchTabData(tabValue);
     }
   }, [selectedNamespace]);
