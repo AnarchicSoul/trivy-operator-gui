@@ -1388,37 +1388,37 @@ const ReportsView = () => {
                         onClick={() => handleOpenDetail(report)}
                       >
                         <TableCell>{report.metadata.name}</TableCell>
-                        <TableCell>{report.report.type || 'N/A'}</TableCell>
-                        <TableCell>{report.report.scanner.name} {report.report.scanner.version}</TableCell>
+                        <TableCell>{report.spec?.compliance?.title || 'Compliance Report'}</TableCell>
+                        <TableCell>Trivy Operator</TableCell>
                         <TableCell align="center">
                           <Chip
-                            label={report.report.summary.passCount || 0}
+                            label={report.status?.summary?.passCount || 0}
                             size="small"
                             sx={{ bgcolor: SEVERITY_COLORS.LOW, color: 'white' }}
                           />
                         </TableCell>
                         <TableCell align="center">
                           <Chip
-                            label={report.report.summary.failCount || 0}
+                            label={report.status?.summary?.failCount || 0}
                             size="small"
                             sx={{ bgcolor: SEVERITY_COLORS.CRITICAL, color: 'white' }}
                           />
                         </TableCell>
                         <TableCell align="center">
                           <Chip
-                            label={report.report.summary.warnCount || 0}
+                            label={report.status?.summary?.warnCount || 0}
                             size="small"
                             sx={{ bgcolor: SEVERITY_COLORS.MEDIUM, color: 'white' }}
                           />
                         </TableCell>
                         <TableCell align="center">
                           <Chip
-                            label={report.report.summary.skipCount || 0}
+                            label={report.status?.summary?.skipCount || 0}
                             size="small"
                             sx={{ bgcolor: SEVERITY_COLORS.UNKNOWN, color: 'white' }}
                           />
                         </TableCell>
-                        <TableCell>{formatDate(report.report.updateTimestamp)}</TableCell>
+                        <TableCell>{formatDate(report.status?.updateTimestamp)}</TableCell>
                       </TableRow>
                     ))
                 )}
