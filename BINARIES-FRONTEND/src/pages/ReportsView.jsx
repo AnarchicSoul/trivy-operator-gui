@@ -544,14 +544,14 @@ const ReportsView = () => {
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-          <Tab label={`Vulnerability Reports (${vulnReports.length})`} />
-          <Tab label={`Config Audit (${configReports.length})`} />
-          <Tab label={`Exposed Secrets (${secretReports.length})`} />
-          <Tab label={`RBAC Assessment (${rbacReports.length})`} />
-          <Tab label={`Infra Assessment (${infraReports.length})`} />
-          <Tab label={`SBOM Reports (${sbomReports.length})`} />
-          <Tab label={`KBOM Reports (${kbomReports.length})`} />
-          <Tab label={`Compliance Reports (${complianceReports.length})`} />
+          <Tab label={`Vulnerability Reports${vulnReports.length > 0 ? ` (${vulnReports.length})` : ''}`} />
+          <Tab label={`Config Audit${configReports.length > 0 ? ` (${configReports.length})` : ''}`} />
+          <Tab label={`Exposed Secrets${secretReports.length > 0 ? ` (${secretReports.length})` : ''}`} />
+          <Tab label={`RBAC Assessment${rbacReports.length > 0 ? ` (${rbacReports.length})` : ''}`} />
+          <Tab label={`Infra Assessment${infraReports.length > 0 ? ` (${infraReports.length})` : ''}`} />
+          <Tab label={`SBOM Reports${sbomReports.length > 0 ? ` (${sbomReports.length})` : ''}`} />
+          <Tab label={`KBOM Reports${kbomReports.length > 0 ? ` (${kbomReports.length})` : ''}`} />
+          <Tab label={`Compliance Reports${complianceReports.length > 0 ? ` (${complianceReports.length})` : ''}`} />
         </Tabs>
       </Paper>
 
@@ -1665,108 +1665,155 @@ const ReportsView = () => {
               </Table>
             </TableContainer>
           )}
-          {selectedReport && selectedReport.report.components && (
+          {selectedReport && selectedReport.report.components && selectedReport.report.components.components && (
             /* SBOM Report Details */
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Name</strong></TableCell>
-                    <TableCell><strong>Version</strong></TableCell>
-                    <TableCell><strong>Type</strong></TableCell>
-                    <TableCell><strong>Licenses</strong></TableCell>
-                    <TableCell><strong>PURL</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {selectedReport.report.components.length === 0 ? (
+            <>
+              <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="body2">
+                  <strong>BOM Format:</strong> {selectedReport.report.components.bomFormat || 'N/A'}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Total Components:</strong> {selectedReport.report.components.components?.length || 0}
+                </Typography>
+              </Box>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
-                          No components found
-                        </Typography>
-                      </TableCell>
+                      <TableCell><strong>Name</strong></TableCell>
+                      <TableCell><strong>Version</strong></TableCell>
+                      <TableCell><strong>Type</strong></TableCell>
+                      <TableCell><strong>Licenses</strong></TableCell>
+                      <TableCell><strong>PURL</strong></TableCell>
                     </TableRow>
-                  ) : (
-                    selectedReport.report.components.map((component, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{component.name || 'N/A'}</TableCell>
-                        <TableCell>{component.version || 'N/A'}</TableCell>
-                        <TableCell>{component.type || 'N/A'}</TableCell>
-                        <TableCell>
-                          {component.licenses && component.licenses.length > 0
-                            ? component.licenses.join(', ')
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                          {component.purl || 'N/A'}
+                  </TableHead>
+                  <TableBody>
+                    {selectedReport.report.components.components.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center">
+                          <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                            No components found
+                          </Typography>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                    ) : (
+                      selectedReport.report.components.components.slice(0, 100).map((component, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{component.name || 'N/A'}</TableCell>
+                          <TableCell>{component.version || 'N/A'}</TableCell>
+                          <TableCell>{component.type || 'N/A'}</TableCell>
+                          <TableCell>
+                            {component.licenses && component.licenses.length > 0
+                              ? (typeof component.licenses[0] === 'string' ? component.licenses.join(', ') :
+                                 component.licenses.map(l => l.license?.id || l.license?.name || 'Unknown').join(', '))
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {component.purl || 'N/A'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {selectedReport.report.components.components.length > 100 && (
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: 'center' }}>
+                  Showing first 100 of {selectedReport.report.components.components.length} components
+                </Typography>
+              )}
+            </>
           )}
-          {selectedReport && selectedReport.report.results && (
+          {selectedReport && selectedReport.spec && selectedReport.spec.compliance && selectedReport.spec.compliance.controls && (
             /* Compliance Report Details */
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>ID</strong></TableCell>
-                    <TableCell><strong>Title</strong></TableCell>
-                    <TableCell><strong>Severity</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
-                    <TableCell><strong>Control ID</strong></TableCell>
-                    <TableCell><strong>Description</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {selectedReport.report.results.length === 0 ? (
+            <>
+              <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="h6">{selectedReport.spec.compliance.title || selectedReport.metadata.name}</Typography>
+                {selectedReport.spec.compliance.description && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {selectedReport.spec.compliance.description}
+                  </Typography>
+                )}
+                {selectedReport.spec.compliance.version && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    <strong>Version:</strong> {selectedReport.spec.compliance.version}
+                  </Typography>
+                )}
+                {selectedReport.status && selectedReport.status.summary && (
+                  <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
+                    <Typography variant="body2" color="success.main">
+                      <strong>Pass:</strong> {selectedReport.status.summary.passCount || 0}
+                    </Typography>
+                    <Typography variant="body2" color="error.main">
+                      <strong>Fail:</strong> {selectedReport.status.summary.failCount || 0}
+                    </Typography>
+                    {selectedReport.status.summary.warnCount > 0 && (
+                      <Typography variant="body2" color="warning.main">
+                        <strong>Warn:</strong> {selectedReport.status.summary.warnCount}
+                      </Typography>
+                    )}
+                    {selectedReport.status.summary.skipCount > 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Skip:</strong> {selectedReport.status.summary.skipCount}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+              </Box>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={6} align="center">
-                        <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
-                          No compliance results found
-                        </Typography>
-                      </TableCell>
+                      <TableCell><strong>Control ID</strong></TableCell>
+                      <TableCell><strong>Name</strong></TableCell>
+                      <TableCell><strong>Severity</strong></TableCell>
+                      <TableCell><strong>Checks</strong></TableCell>
+                      <TableCell><strong>Description</strong></TableCell>
                     </TableRow>
-                  ) : (
-                    selectedReport.report.results.map((result, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{result.id || 'N/A'}</TableCell>
-                        <TableCell>{result.title || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={result.severity || 'N/A'}
-                            size="small"
-                            sx={{
-                              bgcolor: SEVERITY_COLORS[result.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
-                              color: 'white',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={result.status || 'N/A'}
-                            size="small"
-                            color={
-                              result.status === 'PASS' ? 'success' :
-                              result.status === 'FAIL' ? 'error' :
-                              result.status === 'WARN' ? 'warning' : 'default'
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>{result.controlID || 'N/A'}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                          {result.description || 'N/A'}
+                  </TableHead>
+                  <TableBody>
+                    {selectedReport.spec.compliance.controls.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center">
+                          <Typography variant="body2" color="textSecondary" sx={{ py: 2 }}>
+                            No compliance controls found
+                          </Typography>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                    ) : (
+                      selectedReport.spec.compliance.controls.map((control, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{control.id || 'N/A'}</TableCell>
+                          <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {control.name || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {control.severity && (
+                              <Chip
+                                label={control.severity}
+                                size="small"
+                                sx={{
+                                  bgcolor: SEVERITY_COLORS[control.severity?.toUpperCase()] || SEVERITY_COLORS.UNKNOWN,
+                                  color: 'white',
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {control.checks && control.checks.length > 0
+                              ? control.checks.map(c => c.id).join(', ')
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '400px' }}>
+                            {control.description || 'N/A'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
         </DialogContent>
         <DialogActions>
