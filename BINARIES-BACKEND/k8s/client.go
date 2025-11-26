@@ -136,7 +136,11 @@ func getConfig() (*rest.Config, error) {
 // IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetVulnerabilityReports(ctx context.Context, namespace string) (*models.VulnerabilityReportList, error) {
 	// Apply default limit to prevent loading excessive data
-	const defaultLimit = int64(50)
+	// Use larger limit for all-namespaces queries
+	defaultLimit := int64(50)
+	if namespace == "" {
+		defaultLimit = int64(1000)
+	}
 
 	var resourceInterface dynamic.ResourceInterface
 
@@ -173,7 +177,10 @@ func (c *Client) GetAllVulnerabilityReports(ctx context.Context) (*models.Vulner
 // GetConfigAuditReports retrieves all ConfigAuditReports from a namespace
 // IMPORTANT: This method applies a default limit of 50 to prevent OOM issues
 func (c *Client) GetConfigAuditReports(ctx context.Context, namespace string) (*models.ConfigAuditReportList, error) {
-	const defaultLimit = int64(50)
+	defaultLimit := int64(50)
+	if namespace == "" {
+		defaultLimit = int64(1000)
+	}
 
 	var resourceInterface dynamic.ResourceInterface
 
@@ -426,6 +433,13 @@ func (c *Client) GetComplianceReports(ctx context.Context) (*models.ComplianceRe
 func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, namespace string, limit int64) (*models.VulnerabilityReportList, error) {
 	var unstructuredList dynamic.ResourceInterface
 
+	// When querying all namespaces, use a much larger limit to ensure we get reports from all namespaces
+	// not just the first namespace alphabetically
+	actualLimit := limit
+	if namespace == "" && limit < 1000 {
+		actualLimit = 1000 // Increase limit for all-namespaces queries
+	}
+
 	if namespace != "" {
 		// Query specific namespace
 		unstructuredList = c.DynamicClient.Resource(VulnerabilityReportGVR).Namespace(namespace)
@@ -434,7 +448,7 @@ func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, namespace s
 		unstructuredList = c.DynamicClient.Resource(VulnerabilityReportGVR)
 	}
 
-	list, err := unstructuredList.List(ctx, metav1.ListOptions{Limit: limit})
+	list, err := unstructuredList.List(ctx, metav1.ListOptions{Limit: actualLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list vulnerability reports: %w", err)
 	}
@@ -456,13 +470,18 @@ func (c *Client) GetVulnerabilityReportsLimited(ctx context.Context, namespace s
 func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, namespace string, limit int64) (*models.ConfigAuditReportList, error) {
 	var resourceInterface dynamic.ResourceInterface
 
+	actualLimit := limit
+	if namespace == "" && limit < 1000 {
+		actualLimit = 1000
+	}
+
 	if namespace != "" {
 		resourceInterface = c.DynamicClient.Resource(ConfigAuditReportGVR).Namespace(namespace)
 	} else {
 		resourceInterface = c.DynamicClient.Resource(ConfigAuditReportGVR)
 	}
 
-	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: limit})
+	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: actualLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list config audit reports: %w", err)
 	}
@@ -484,13 +503,18 @@ func (c *Client) GetConfigAuditReportsLimited(ctx context.Context, namespace str
 func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, namespace string, limit int64) (*models.ExposedSecretReportList, error) {
 	var resourceInterface dynamic.ResourceInterface
 
+	actualLimit := limit
+	if namespace == "" && limit < 1000 {
+		actualLimit = 1000
+	}
+
 	if namespace != "" {
 		resourceInterface = c.DynamicClient.Resource(ExposedSecretReportGVR).Namespace(namespace)
 	} else {
 		resourceInterface = c.DynamicClient.Resource(ExposedSecretReportGVR)
 	}
 
-	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: limit})
+	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: actualLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list exposed secret reports: %w", err)
 	}
@@ -512,13 +536,18 @@ func (c *Client) GetExposedSecretReportsLimited(ctx context.Context, namespace s
 func (c *Client) GetRbacAssessmentReportsLimited(ctx context.Context, namespace string, limit int64) (*models.RbacAssessmentReportList, error) {
 	var resourceInterface dynamic.ResourceInterface
 
+	actualLimit := limit
+	if namespace == "" && limit < 1000 {
+		actualLimit = 1000
+	}
+
 	if namespace != "" {
 		resourceInterface = c.DynamicClient.Resource(RbacAssessmentReportGVR).Namespace(namespace)
 	} else {
 		resourceInterface = c.DynamicClient.Resource(RbacAssessmentReportGVR)
 	}
 
-	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: limit})
+	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: actualLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list RBAC assessment reports: %w", err)
 	}
@@ -561,13 +590,18 @@ func (c *Client) GetInfraAssessmentReportsLimited(ctx context.Context, limit int
 func (c *Client) GetSBOMReportsLimited(ctx context.Context, namespace string, limit int64) (*models.SBOMReportList, error) {
 	var resourceInterface dynamic.ResourceInterface
 
+	actualLimit := limit
+	if namespace == "" && limit < 1000 {
+		actualLimit = 1000
+	}
+
 	if namespace != "" {
 		resourceInterface = c.DynamicClient.Resource(SBOMReportGVR).Namespace(namespace)
 	} else {
 		resourceInterface = c.DynamicClient.Resource(SBOMReportGVR)
 	}
 
-	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: limit})
+	unstructuredList, err := resourceInterface.List(ctx, metav1.ListOptions{Limit: actualLimit})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list SBOM reports: %w", err)
 	}
