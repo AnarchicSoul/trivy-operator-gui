@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -60,7 +60,9 @@ const DEFAULT_ROWS_PER_PAGE = 50;
 
 const ReportsView = () => {
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = useState(0);
+  const [searchParams] = useSearchParams();
+  const initialTab = parseInt(searchParams.get('tab') || '0', 10);
+  const [tabValue, setTabValue] = useState(initialTab);
   const [vulnReports, setVulnReports] = useState([]);
   const [configReports, setConfigReports] = useState([]);
   const [secretReports, setSecretReports] = useState([]);
