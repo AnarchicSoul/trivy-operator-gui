@@ -11,7 +11,10 @@ const api = axios.create({
 });
 
 // Dashboard
-export const getDashboard = () => api.get('/dashboard');
+export const getDashboard = (namespace = '') => {
+  const params = namespace ? { namespace } : {};
+  return api.get('/dashboard', { params });
+};
 
 // Reports
 export const getAllReports = (namespace = '') => {

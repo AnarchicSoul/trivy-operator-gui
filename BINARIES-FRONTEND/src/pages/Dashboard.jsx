@@ -9,6 +9,10 @@ import {
   Alert,
   Card,
   CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   PieChart,
@@ -29,7 +33,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import SecurityIcon from '@mui/icons-material/Security';
 import CloudIcon from '@mui/icons-material/Cloud';
-import { getDashboard } from '../services/api';
+import { getDashboard, getNamespaces } from '../services/api';
 
 const SEVERITY_COLORS = {
   CRITICAL: '#d32f2f',
@@ -43,12 +47,23 @@ const Dashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [namespaces, setNamespaces] = useState([]);
+  const [selectedNamespace, setSelectedNamespace] = useState('');
+
+  const fetchNamespaces = async () => {
+    try {
+      const response = await getNamespaces();
+      setNamespaces(response.data.namespaces || []);
+    } catch (err) {
+      console.error('Failed to fetch namespaces:', err);
+    }
+  };
 
   const fetchDashboard = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getDashboard();
+      const response = await getDashboard(selectedNamespace);
       setDashboard(response.data);
     } catch (err) {
       setError(err.message || 'Failed to fetch dashboard data');
@@ -58,8 +73,12 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchDashboard();
+    fetchNamespaces();
   }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [selectedNamespace]);
 
   if (loading) {
     return (
@@ -127,9 +146,26 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Security Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          Security Dashboard
+        </Typography>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Namespace</InputLabel>
+          <Select
+            value={selectedNamespace}
+            onChange={(e) => setSelectedNamespace(e.target.value)}
+            label="Namespace"
+          >
+            <MenuItem value="">All Namespaces</MenuItem>
+            {namespaces.map((ns) => (
+              <MenuItem key={ns} value={ns}>
+                {ns}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

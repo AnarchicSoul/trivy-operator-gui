@@ -25,36 +25,38 @@ func NewHandler(client *k8s.Client) *Handler {
 
 // GetDashboard returns aggregated dashboard data
 // Optimized to load only a limited sample of reports for statistics
+// Supports optional 'namespace' query parameter to filter by namespace
 func (h *Handler) GetDashboard(c *gin.Context) {
 	ctx := context.Background()
+	namespace := c.Query("namespace")
 
 	// Limit the number of reports loaded for dashboard statistics
 	// This significantly reduces memory usage - only need a small sample for stats
 	const dashboardLimit = int64(20)
 
-	// Get limited vulnerability reports for statistics (from all namespaces)
-	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, "", dashboardLimit)
+	// Get limited vulnerability reports for statistics (from specified namespace or all)
+	vulnReports, err := h.K8sClient.GetVulnerabilityReportsLimited(ctx, namespace, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited config audit reports
-	configReports, err := h.K8sClient.GetConfigAuditReportsLimited(ctx, "", dashboardLimit)
+	configReports, err := h.K8sClient.GetConfigAuditReportsLimited(ctx, namespace, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited exposed secret reports
-	secretReports, err := h.K8sClient.GetExposedSecretReportsLimited(ctx, "", dashboardLimit)
+	secretReports, err := h.K8sClient.GetExposedSecretReportsLimited(ctx, namespace, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get limited RBAC assessment reports
-	rbacReports, err := h.K8sClient.GetRbacAssessmentReportsLimited(ctx, "", dashboardLimit)
+	rbacReports, err := h.K8sClient.GetRbacAssessmentReportsLimited(ctx, namespace, dashboardLimit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
