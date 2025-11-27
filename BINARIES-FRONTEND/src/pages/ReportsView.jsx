@@ -429,6 +429,82 @@ const ReportsView = () => {
           }
         },
       });
+    } else if (report.report.components) {
+      // SBOM or KBOM Report
+      const components = report.report.components.components || [];
+      const tableData = components.slice(0, 100).map(comp => {
+        const licenses = (comp.licenses || []).map(l => l.license?.name || l.license?.id || 'Unknown').join(', ');
+        return [
+          comp.name || 'N/A',
+          comp.version || 'N/A',
+          comp.type || 'N/A',
+          licenses || 'N/A',
+        ];
+      });
+
+      autoTable(doc, {
+        startY: startY,
+        head: [['Component Name', 'Version', 'Type', 'Licenses']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [63, 81, 181], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 'auto' },
+        },
+        styles: { fontSize: 8, cellPadding: 2 },
+      });
+
+      if (components.length > 100) {
+        const finalY = doc.lastAutoTable.finalY || startY;
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`... et ${components.length - 100} autres composants (PDF limité aux 100 premiers)`, 14, finalY + 10);
+      }
+    } else if (report.spec?.compliance) {
+      // Compliance Report
+      const controls = report.spec.compliance.controls || [];
+      const tableData = controls.slice(0, 50).map(control => [
+        control.id || 'N/A',
+        control.name || 'N/A',
+        control.severity || 'N/A',
+        control.totalPass || 0,
+        control.totalFail || 0,
+        (control.description || 'N/A').substring(0, 100),
+      ]);
+
+      autoTable(doc, {
+        startY: startY,
+        head: [['Control ID', 'Name', 'Severity', 'Pass', 'Fail', 'Description']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [63, 81, 181], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 15 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 'auto' },
+        },
+        styles: { fontSize: 7, cellPadding: 2 },
+        didParseCell: (data) => {
+          if (data.column.index === 2 && data.section === 'body') {
+            const color = getSeverityColor(data.cell.raw);
+            data.cell.styles.fillColor = color;
+            data.cell.styles.textColor = 255;
+          }
+        },
+      });
+
+      if (controls.length > 50) {
+        const finalY = doc.lastAutoTable.finalY || startY;
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`... et ${controls.length - 50} autres contrôles (PDF limité aux 50 premiers)`, 14, finalY + 10);
+      }
     }
 
     // Footer
@@ -489,6 +565,29 @@ const ReportsView = () => {
         check.description || '',
         check.messages?.join(' | ') || '',
         check.remediation || '',
+      ]);
+    } else if (report.report.components) {
+      // SBOM or KBOM Report
+      headers = ['Component Name', 'Version', 'Type', 'Licenses'];
+      rows = (report.report.components.components || []).map(comp => {
+        const licenses = (comp.licenses || []).map(l => l.license?.name || l.license?.id || 'Unknown').join('; ');
+        return [
+          comp.name || '',
+          comp.version || '',
+          comp.type || '',
+          licenses,
+        ];
+      });
+    } else if (report.spec?.compliance) {
+      // Compliance Report
+      headers = ['Control ID', 'Name', 'Severity', 'Pass', 'Fail', 'Description'];
+      rows = (report.spec.compliance.controls || []).map(control => [
+        control.id || '',
+        control.name || '',
+        control.severity || '',
+        control.totalPass || 0,
+        control.totalFail || 0,
+        control.description || '',
       ]);
     }
 
