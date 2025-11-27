@@ -306,13 +306,27 @@ const ReportsView = () => {
     doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 44);
     doc.text(`Report Type: ${reportType}`, 14, 51);
 
-    // Summary
-    const summary = report.report.summary;
+    // Summary - Different for each report type
     doc.setFontSize(11);
     doc.setTextColor(33, 37, 41);
     doc.text('Summary:', 14, 62);
     doc.setFontSize(10);
-    doc.text(`Critical: ${summary.criticalCount || 0}  |  High: ${summary.highCount || 0}  |  Medium: ${summary.mediumCount || 0}  |  Low: ${summary.lowCount || 0}`, 14, 69);
+
+    if (report.report?.summary) {
+      // Vulnerability, Secret, or Check reports with severity summary
+      const summary = report.report.summary;
+      doc.text(`Critical: ${summary.criticalCount || 0}  |  High: ${summary.highCount || 0}  |  Medium: ${summary.mediumCount || 0}  |  Low: ${summary.lowCount || 0}`, 14, 69);
+    } else if (report.report?.components) {
+      // SBOM or KBOM report
+      const componentCount = report.report.components.components?.length || 0;
+      doc.text(`Total Components: ${componentCount}`, 14, 69);
+    } else if (report.spec?.compliance) {
+      // Compliance report
+      const controls = report.spec.compliance.controls || [];
+      const totalPass = controls.reduce((sum, c) => sum + (c.totalPass || 0), 0);
+      const totalFail = controls.reduce((sum, c) => sum + (c.totalFail || 0), 0);
+      doc.text(`Total Controls: ${controls.length}  |  Pass: ${totalPass}  |  Fail: ${totalFail}`, 14, 69);
+    }
 
     let startY = 78;
 
@@ -591,13 +605,30 @@ const ReportsView = () => {
       ]);
     }
 
-    // Build CSV content
+    // Build CSV content - Different summary for each report type
+    let summaryLine = '';
+    if (report.report?.summary) {
+      // Vulnerability, Secret, or Check reports
+      const summary = report.report.summary;
+      summaryLine = `# Summary: Critical=${summary.criticalCount || 0}, High=${summary.highCount || 0}, Medium=${summary.mediumCount || 0}, Low=${summary.lowCount || 0}`;
+    } else if (report.report?.components) {
+      // SBOM or KBOM report
+      const componentCount = report.report.components.components?.length || 0;
+      summaryLine = `# Summary: Total Components=${componentCount}`;
+    } else if (report.spec?.compliance) {
+      // Compliance report
+      const controls = report.spec.compliance.controls || [];
+      const totalPass = controls.reduce((sum, c) => sum + (c.totalPass || 0), 0);
+      const totalFail = controls.reduce((sum, c) => sum + (c.totalFail || 0), 0);
+      summaryLine = `# Summary: Total Controls=${controls.length}, Pass=${totalPass}, Fail=${totalFail}`;
+    }
+
     const csvContent = [
       `# Trivy Security Report - ${reportType}`,
       `# Report: ${report.metadata.name}`,
       `# Namespace: ${report.metadata.namespace || 'N/A'}`,
       `# Generated: ${new Date().toISOString()}`,
-      `# Summary: Critical=${report.report.summary.criticalCount || 0}, High=${report.report.summary.highCount || 0}, Medium=${report.report.summary.mediumCount || 0}, Low=${report.report.summary.lowCount || 0}`,
+      summaryLine,
       '',
       headers.map(escapeCSV).join(','),
       ...rows.map(row => row.map(escapeCSV).join(','))
