@@ -810,25 +810,54 @@ const ReportsView = () => {
             yPosition = 20;
             doc.setFontSize(16);
             doc.setTextColor(94, 53, 177);
-            doc.text('SBOM REPORTS - Component Summary', 14, yPosition);
+            doc.text('SBOM REPORTS - Full Component Details', 14, yPosition);
             yPosition += 10;
 
-            const sbomSummaryData = sbomReports.map(report => [
-              report.metadata?.name || 'Unknown',
-              report.metadata?.namespace || 'N/A',
-              report.report?.components?.components?.length || 0,
-              report.report?.scanner?.name || 'N/A'
-            ]);
+            sbomReports.forEach((report, idx) => {
+              const components = report.report?.components?.components || [];
+              const tableData = components.length === 0
+                ? [['No components found', '', '', '']]
+                : components.slice(0, 100).map(comp => {
+                    const licenses = (comp.licenses || []).map(l => l.license?.name || l.license?.id || 'Unknown').join(', ');
+                    return [
+                      (comp.name || '').substring(0, 35),
+                      (comp.version || '').substring(0, 15),
+                      (comp.type || '').substring(0, 15),
+                      licenses.substring(0, 35)
+                    ];
+                  });
 
-            console.log('[PDF Export] SBOM summary data:', sbomSummaryData);
+              autoTable(doc, {
+                startY: yPosition,
+                head: [[`Report: ${report.metadata?.name || 'Unknown'} (${report.metadata?.namespace || 'N/A'}) - ${components.length} components total`]],
+                headStyles: { fillColor: [94, 53, 177], fontSize: 10 },
+                margin: { left: 14 },
+                styles: { fontSize: 8 }
+              });
 
-            autoTable(doc, {
-              startY: yPosition,
-              head: [['Report Name', 'Namespace', 'Components', 'Scanner']],
-              body: sbomSummaryData,
-              headStyles: { fillColor: [94, 53, 177], fontSize: 10 },
-              styles: { fontSize: 8 },
-              margin: { left: 14 }
+              autoTable(doc, {
+                startY: doc.lastAutoTable.finalY + 2,
+                head: [['Component Name', 'Version', 'Type', 'Licenses']],
+                body: tableData,
+                headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+                styles: { fontSize: 7 },
+                margin: { left: 14 }
+              });
+
+              if (components.length > 100) {
+                autoTable(doc, {
+                  startY: doc.lastAutoTable.finalY + 2,
+                  body: [[`... et ${components.length - 100} autres composants (PDF limité aux 100 premiers)`]],
+                  styles: { fontSize: 8, fontStyle: 'italic', textColor: [100, 100, 100] },
+                  margin: { left: 14 }
+                });
+              }
+
+              yPosition = doc.lastAutoTable.finalY + 10;
+              if (yPosition > 180 && idx < sbomReports.length - 1) {
+                doc.addPage();
+                yPosition = 20;
+              }
             });
 
             // Save PDF with category-specific filename
@@ -848,24 +877,50 @@ const ReportsView = () => {
             yPosition = 20;
             doc.setFontSize(16);
             doc.setTextColor(0, 150, 136);
-            doc.text('KBOM REPORTS - Component Summary', 14, yPosition);
+            doc.text('KBOM REPORTS - Full Component Details', 14, yPosition);
             yPosition += 10;
 
-            const kbomSummaryData = kbomReports.map(report => [
-              report.metadata?.name || 'Unknown',
-              report.report?.components?.components?.length || 0,
-              report.report?.scanner?.name || 'N/A'
-            ]);
+            kbomReports.forEach((report, idx) => {
+              const components = report.report?.components?.components || [];
+              const tableData = components.length === 0
+                ? [['No components found', '', '']]
+                : components.slice(0, 100).map(comp => [
+                    (comp.name || '').substring(0, 50),
+                    (comp.version || '').substring(0, 20),
+                    (comp.type || '').substring(0, 30)
+                  ]);
 
-            console.log('[PDF Export] KBOM summary data:', kbomSummaryData);
+              autoTable(doc, {
+                startY: yPosition,
+                head: [[`Report: ${report.metadata?.name || 'Unknown'} - ${components.length} components total`]],
+                headStyles: { fillColor: [0, 150, 136], fontSize: 10 },
+                margin: { left: 14 },
+                styles: { fontSize: 8 }
+              });
 
-            autoTable(doc, {
-              startY: yPosition,
-              head: [['Report Name', 'Components', 'Scanner']],
-              body: kbomSummaryData,
-              headStyles: { fillColor: [0, 150, 136], fontSize: 10 },
-              styles: { fontSize: 8 },
-              margin: { left: 14 }
+              autoTable(doc, {
+                startY: doc.lastAutoTable.finalY + 2,
+                head: [['Component Name', 'Version', 'Type']],
+                body: tableData,
+                headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
+                styles: { fontSize: 7 },
+                margin: { left: 14 }
+              });
+
+              if (components.length > 100) {
+                autoTable(doc, {
+                  startY: doc.lastAutoTable.finalY + 2,
+                  body: [[`... et ${components.length - 100} autres composants (PDF limité aux 100 premiers)`]],
+                  styles: { fontSize: 8, fontStyle: 'italic', textColor: [100, 100, 100] },
+                  margin: { left: 14 }
+                });
+              }
+
+              yPosition = doc.lastAutoTable.finalY + 10;
+              if (yPosition > 180 && idx < kbomReports.length - 1) {
+                doc.addPage();
+                yPosition = 20;
+              }
             });
 
             // Save PDF with category-specific filename
@@ -890,33 +945,43 @@ const ReportsView = () => {
 
             complianceReports.forEach((report, idx) => {
               const controls = report.spec?.compliance?.controls || [];
-              const failedControls = controls.filter(c => (c.totalFail || 0) > 0);
-              const tableData = failedControls.length === 0
-                ? [['All controls passed', '', '', '']]
-                : failedControls.map(c => [
-                    (c.id || '').substring(0, 15),
-                    (c.name || '').substring(0, 50),
+              const tableData = controls.length === 0
+                ? [['No controls found', '', '', '', '', '']]
+                : controls.slice(0, 50).map(c => [
+                    (c.id || '').substring(0, 12),
+                    (c.name || '').substring(0, 40),
                     c.severity || '',
-                    c.totalFail || 0
+                    c.totalPass || 0,
+                    c.totalFail || 0,
+                    (c.description || '').substring(0, 50)
                   ]);
 
-              console.log('[PDF Export] Compliance report', idx, 'controls:', controls.length, 'failed:', failedControls.length);
+              console.log('[PDF Export] Compliance report', idx, 'controls:', controls.length);
 
               autoTable(doc, {
                 startY: yPosition,
-                head: [[`Report: ${report.metadata?.name || 'Unknown'} - ${report.spec?.compliance?.title || 'Compliance'}`]],
+                head: [[`Report: ${report.metadata?.name || 'Unknown'} - ${report.spec?.compliance?.title || 'Compliance'} (${controls.length} controls total)`]],
                 headStyles: { fillColor: [67, 160, 71], fontSize: 10 },
                 margin: { left: 14 }
               });
 
               autoTable(doc, {
                 startY: doc.lastAutoTable.finalY + 2,
-                head: [['Control ID', 'Name', 'Severity', 'Failures']],
+                head: [['Control ID', 'Name', 'Severity', 'Pass', 'Fail', 'Description']],
                 body: tableData,
                 headStyles: { fillColor: [100, 100, 100], fontSize: 8 },
                 styles: { fontSize: 7 },
                 margin: { left: 14 }
               });
+
+              if (controls.length > 50) {
+                autoTable(doc, {
+                  startY: doc.lastAutoTable.finalY + 2,
+                  body: [[`... et ${controls.length - 50} autres contrôles (PDF limité aux 50 premiers)`]],
+                  styles: { fontSize: 8, fontStyle: 'italic', textColor: [100, 100, 100] },
+                  margin: { left: 14 }
+                });
+              }
 
               yPosition = doc.lastAutoTable.finalY + 10;
               if (yPosition > 180 && idx < complianceReports.length - 1) {
