@@ -804,6 +804,7 @@ const ReportsView = () => {
           break;
 
         case 5: // SBOM Reports
+          console.log('[PDF Export] Case 5 - SBOM Reports, count:', sbomReports.length);
           if (sbomReports.length > 0) {
             doc.addPage();
             yPosition = 20;
@@ -819,6 +820,8 @@ const ReportsView = () => {
               report.report?.scanner?.name || 'N/A'
             ]);
 
+            console.log('[PDF Export] SBOM summary data:', sbomSummaryData);
+
             autoTable(doc, {
               startY: yPosition,
               head: [['Report Name', 'Namespace', 'Components', 'Scanner']],
@@ -830,13 +833,16 @@ const ReportsView = () => {
 
             // Save PDF with category-specific filename
             const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            console.log('[PDF Export] Saving SBOM PDF with name:', `trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
             doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+            console.log('[PDF Export] SBOM PDF saved successfully');
           } else {
             alert('Aucun rapport SBOM à exporter');
           }
           break;
 
         case 6: // KBOM Reports
+          console.log('[PDF Export] Case 6 - KBOM Reports, count:', kbomReports.length);
           if (kbomReports.length > 0) {
             doc.addPage();
             yPosition = 20;
@@ -851,6 +857,8 @@ const ReportsView = () => {
               report.report?.scanner?.name || 'N/A'
             ]);
 
+            console.log('[PDF Export] KBOM summary data:', kbomSummaryData);
+
             autoTable(doc, {
               startY: yPosition,
               head: [['Report Name', 'Components', 'Scanner']],
@@ -862,13 +870,16 @@ const ReportsView = () => {
 
             // Save PDF with category-specific filename
             const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            console.log('[PDF Export] Saving KBOM PDF with name:', `trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
             doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+            console.log('[PDF Export] KBOM PDF saved successfully');
           } else {
             alert('Aucun rapport KBOM à exporter');
           }
           break;
 
         case 7: // Compliance Reports
+          console.log('[PDF Export] Case 7 - Compliance Reports, count:', complianceReports.length);
           if (complianceReports.length > 0) {
             doc.addPage();
             yPosition = 20;
@@ -888,6 +899,8 @@ const ReportsView = () => {
                     c.severity || '',
                     c.totalFail || 0
                   ]);
+
+              console.log('[PDF Export] Compliance report', idx, 'controls:', controls.length, 'failed:', failedControls.length);
 
               autoTable(doc, {
                 startY: yPosition,
@@ -914,7 +927,9 @@ const ReportsView = () => {
 
             // Save PDF with category-specific filename
             const categoryName = tabNames[tabValue].replace(/\s+/g, '-').toLowerCase();
+            console.log('[PDF Export] Saving Compliance PDF with name:', `trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
             doc.save(`trivy-${categoryName}-${namespace.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+            console.log('[PDF Export] Compliance PDF saved successfully');
           } else {
             alert('Aucun rapport de compliance à exporter');
           }
